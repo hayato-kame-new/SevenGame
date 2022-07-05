@@ -36,10 +36,10 @@ class Game {
                     str = _tagList.get(i) + (j+1).toString()
                     listItem = ListItem(
                         ++count, // 管理IDは １からスタートして連番で振る Long値
-                        _numberList.get(j),
+                        //_numberList.get(j),
                         _markList.get(i),
                         _numberList.get(j),
-                        _numberList.get(j),
+                      //  _numberList.get(j),
                         _markList.get(i),
                         true,  // 置いてある
                         str
@@ -48,10 +48,10 @@ class Game {
                     str = _tagList.get(i) + (j+1).toString()  // これはどうしようか
                     listItem = ListItem(
                         ++count, // 管理IDは １からスタートして連番で振る
-                        "",
+                       // "",
                         0,  // マークは とりあえず 0
                         "",
-                        "",
+                       // "",
                         0, // マークは とりあえず 0
                         false,// 卓上に置いていない
                         str  // これも空文字に後で変更しておいた方がいいのかも、でも判定する時に必要かも？？？

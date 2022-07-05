@@ -1,6 +1,7 @@
 package to.msn.wings.sevengame.rv
 
 import android.graphics.Color
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,10 +43,10 @@ class CardListAdapter(private val data: List<ListItem>, placeableList : MutableL
      *
      */
     override fun onBindViewHolder(holder: CardViewHolder, position: Int) {
-        holder.number.text = data[position].number
+       // holder.number.text = data[position].number
         holder.mark.text = data[position].mark.toString()
         holder.numberCenter.text = data[position].numberCenter
-        holder.numberDown.text = data[position].numberDown
+      //  holder.numberDown.text = data[position].numberDown
         holder.markDown.text = data[position].markDown.toString()
         holder.placed.text = data[position].placed.toString()
         holder.tag.text = data[position].tag
@@ -53,10 +54,10 @@ class CardListAdapter(private val data: List<ListItem>, placeableList : MutableL
         // holder.itemView でルート要素のビューのCardView が取得できる
         val cardView : CardView = holder.itemView.findViewById(R.id.cardView);
         // holder.itemView はルートの要素の CardView そこからfindViewByIdを使って配下のウィジェットを取得
-        val number: TextView = holder.itemView.findViewById(R.id.number)
+       // val number: TextView = holder.itemView.findViewById(R.id.number)
         val mark: TextView = holder.itemView.findViewById(R.id.mark)
         val numberCenter: TextView = holder.itemView.findViewById(R.id.numberCenter)
-        val numberDown: TextView = holder.itemView.findViewById(R.id.numberDown)
+       // val numberDown: TextView = holder.itemView.findViewById(R.id.numberDown)
         val markDown: TextView = holder.itemView.findViewById(R.id.markDown)
         val placed: TextView = holder.itemView.findViewById(R.id.placed)
         val tag: TextView = holder.itemView.findViewById(R.id.tag)
@@ -86,21 +87,30 @@ class CardListAdapter(private val data: List<ListItem>, placeableList : MutableL
                 markDown.setText("♠")
             }
             "2" -> {
-                mark.setText("♥")
-                markDown.setText("♥")
+                mark.setText("♡")
+                markDown.setText("♡")
             }
             "3" -> {
                 mark.setText("♦")
                 markDown.setText("♦")
             }
             "4" -> {
-                mark.setText("♣")
-                markDown.setText("♣")
+                mark.setText("♧")
+                markDown.setText("♧")
             }
             else -> {  // "5" JOKERの時です 今回は JOKER無しなので使用していませんが
                 mark.setText("")
                 markDown.setText("")
             }
+        }
+
+        /**
+         * rvを上に被せてるとにしてると押せる
+         */
+        cardView.setOnClickListener {
+            Log.i("ok", it.toString() + "です" + it.javaClass)  // it　は CardViewですね！！
+            val tag = it.findViewById<TextView>(R.id.tag)
+            Log.i("ok", tag.text.toString() + "です")
         }
 
     }

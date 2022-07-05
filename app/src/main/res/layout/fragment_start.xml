@@ -7,24 +7,27 @@
     android:layout_height="match_parent"
     tools:context=".StartFragment">
 
-<FrameLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    >
 
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/playerrv"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="50dp">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/playerrv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:minHeight="500dp">
 
-    </androidx.recyclerview.widget.RecyclerView>
+        </androidx.recyclerview.widget.RecyclerView>
 
-</FrameLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="60dp">
+
+        </androidx.recyclerview.widget.RecyclerView>
+    </FrameLayout>
+
+
 </ScrollView>
