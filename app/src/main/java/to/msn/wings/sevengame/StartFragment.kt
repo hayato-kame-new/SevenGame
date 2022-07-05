@@ -7,16 +7,25 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import to.msn.wings.sevengame.playerrv.PlayerCardListAdapter
+import to.msn.wings.sevengame.playerrv.PlayerListItem
 import to.msn.wings.sevengame.rv.CardListAdapter
 import to.msn.wings.sevengame.rv.ListItem
 
-
+/**
+ * MainActivity上のフラグメントです
+ * Androidでは、アクティビティとフラグメントのクラスでは、引数なしのコンストラクタを強く推奨していますので、コンストラクタは規定通りにすること
+ */
 class StartFragment : Fragment() {
 
-    var placeableList = mutableListOf<String>("♠6", "♠8", "♥6", "♥8",  "♦6", "♦8", "♣6", "♣8")
+    var _placeableList = mutableListOf<String>("♠6", "♠8", "♥6", "♥8",  "♦6", "♦8", "♣6", "♣8")
     // 変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
-    private lateinit var game : Game
-    private lateinit var tableCardData : List<ListItem>
+    private lateinit var _game : Game
+    private lateinit var _tableCardData : List<ListItem>
+    private lateinit var _playersCardData : ArrayList<PlayerListItem>
+    private lateinit var _playerList : MutableList<PlayerListItem>
+    private lateinit var _comAList : MutableList<PlayerListItem>
+    private lateinit var _comBList : MutableList<PlayerListItem>
 
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)
@@ -29,23 +38,57 @@ class StartFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_start, container, false)
 
-        game = Game()
-        tableCardData = game.getStartTableCardData() // 卓上
+        _game = Game()
+        _tableCardData = _game.getStartTableCardData() // 卓上カード 13 * 4 = 52枚
+        _playersCardData = _game.getPlayersCardData()  // シャッフル済み 3人のプレイヤーのカード 12 * 4 = 48枚
+        // ３当分する
+        _playerList = _playersCardData.subList(0, (_playersCardData.size / 3) )
+        _comAList = _playersCardData.subList(_playersCardData.size / 3 , _playersCardData.size * 2/3 )
+        _comBList = _playersCardData.subList(_playersCardData.size * 2/3 , _playersCardData.size)
+        // プレイする人の分は、ソートして表示するので 管理ID順に並べる
+        sort(_playerList)  // ソートずみのリストをアダプターの引数に渡す
+
+
 
         activity?.let {
             view.findViewById<RecyclerView>(R.id.rv).apply {
                 //  this.setHasFixedSize(true)  // あらかじめ固定サイズの場合にパフォーマンス向上
                 layoutManager = GridLayoutManager(activity, 13)  // ここはフラグメントなので thisじゃなくて activityプロパティ
-               // adapter = CardListAdapter(tableCardData)
-                adapter = CardListAdapter(tableCardData, placeableList)
+                // adapter = CardListAdapter(tableCardData)
+                // アダプターのクラスにデータを渡したいときには、このようにコンストラクタの実引数に渡すことで可能になります
+                adapter = CardListAdapter(_tableCardData, _placeableList)
             }
+        }
 
+        activity?.let {
+            view.findViewById<RecyclerView>(R.id.playerrv).apply {
+                //  this.setHasFixedSize(true)  // あらかじめ固定サイズの場合にパフォーマンス向上
+                layoutManager =
+                    GridLayoutManager(activity, 16)  // ここはフラグメントなので thisじゃなくて activityプロパティ
+                adapter = PlayerCardListAdapter(_playerList)
+            }
         }
 
 
 
-        return view  // フラグメントでは最後必ず viewを返す
+            return view  // フラグメントでは最後必ず viewを返す
     }
+
+    /**
+     * 管理ID順に並べる.インスタンスメソッド
+     */
+    private fun sort(list: MutableList<PlayerListItem>) {
+        for (i in 0 until list.size) {
+            for (j in i + 1 until  list.size) {
+                if ( list.get(i)!!.pId.toInt() >  list.get(j)!!.pId.toInt()) {
+                    val t: PlayerListItem = list.get(i)
+                    list.set(i, list.get(j))
+                    list.set(j, t)
+                }
+            }
+        }
+    }
+
 
 
 }

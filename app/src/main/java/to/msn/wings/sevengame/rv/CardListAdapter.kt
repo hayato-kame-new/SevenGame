@@ -105,6 +105,9 @@ class CardListAdapter(private val data: List<ListItem>, placeableList : MutableL
 
     }
 
+    /**
+     * データのバインドはこの回数実行されます
+     */
     override fun getItemCount(): Int {
         return data.size
     }
