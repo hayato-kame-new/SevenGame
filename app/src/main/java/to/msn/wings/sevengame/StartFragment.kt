@@ -9,6 +9,8 @@ import android.view.ViewGroup
 
 class StartFragment : Fragment() {
 
+    var placeableList = mutableListOf<String>("♠6", "♠8", "♥6", "♥8",  "♦6", "♦8", "♣6", "♣8")
+
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)
 //
@@ -18,8 +20,8 @@ class StartFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_start, container, false)
+        val view = inflater.inflate(R.layout.fragment_start, container, false)
+        return view  // フラグメントでは最後必ず viewを返す
     }
 
 
