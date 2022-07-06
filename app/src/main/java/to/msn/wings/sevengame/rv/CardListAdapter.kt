@@ -17,7 +17,7 @@ class CardListAdapter(private val data: List<ListItem>, placeableList : MutableL
 
     // フィールド
     private val _isLayoutXLarge = false
-    // private val placeableList : MutableList<String>? = null  // コンストラクタの引数で受け取ります
+    // 引数のままでも プロパティとして使えるけど
     private val _placeableList : MutableList<String> = placeableList  // コンストラクタの引数で渡ってきたものをフィールド値にセットします
 
     /**
@@ -26,15 +26,7 @@ class CardListAdapter(private val data: List<ListItem>, placeableList : MutableL
      */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CardViewHolder {
         val cardView : View = LayoutInflater.from(parent.context).inflate(R.layout.list_item, parent, false)
-//        cardView.setOnClickListener(View.OnClickListener { view ->
-//            // クリックしたカードのtagを見て判断する
-//            val tag = view.findViewById<TextView>(R.id.tag)
-//            if (_placeableList.contains(tag.text)) {
-//                // もしおけるリストに含まれていればintentに着けて送りますが、
-//
-//            }
-//            // おけるリストに含まれていないのならばこのまま遷移するだけ もしくは置けませんのトーストを出すだけ
-//        })
+
         return CardViewHolder( cardView)
     }
 
@@ -107,10 +99,10 @@ class CardListAdapter(private val data: List<ListItem>, placeableList : MutableL
         /**
          * rvを上に被せてるとにしてると押せる
          */
-        cardView.setOnClickListener {
-            Log.i("ok", it.toString() + "です" + it.javaClass)  // it　は CardViewですね！！
+        cardView.setOnClickListener {   // it　は CardViewです
             val tag = it.findViewById<TextView>(R.id.tag)
-            Log.i("ok", tag.text.toString() + "です")
+            Log.i("ok", tag.text.toString() + "です" + it.toString() + "です クラスは" + it.javaClass)
+
         }
 
     }

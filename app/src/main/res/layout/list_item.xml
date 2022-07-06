@@ -6,8 +6,8 @@
     android:id="@+id/cardView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="6dp"
-    android:layout_marginRight="10dp"
+    android:layout_marginRight="7dp"
+    android:layout_marginBottom="7dp"
 
     app:cardBackgroundColor="@color/cardCream"
     app:cardCornerRadius="7dp"
@@ -22,8 +22,10 @@
             android:id="@+id/mark"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:layout_marginTop="3dp"
             android:text="TextView"
-            android:textSize="18sp"
+            android:textSize="20sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -36,7 +38,7 @@
             android:layout_marginEnd="20dp"
             android:text="TextView"
             android:textAlignment="center"
-            android:textSize="24sp"
+            android:textSize="27sp"
             app:layout_constraintBottom_toTopOf="@+id/markDown"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.501"
@@ -48,8 +50,10 @@
             android:id="@+id/markDown"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="2dp"
+            android:layout_marginBottom="3dp"
             android:text="TextView"
-            android:textSize="18sp"
+            android:textSize="20sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
