@@ -17,8 +17,8 @@ import to.msn.wings.sevengame.rv.ListItem
  * Androidでは、アクティビティとフラグメントのクラスでは、引数なしのコンストラクタを強く推奨していますので、コンストラクタは規定通りにすること
  */
 class StartFragment : Fragment() {
-
-    lateinit var _placeableList : MutableList<String>
+     // publicにしておく _placeableList は
+    lateinit var _availableList : MutableList<String>
   // var _placeableList = mutableListOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")
     // 変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
     private lateinit var _game : Game
@@ -44,7 +44,7 @@ class StartFragment : Fragment() {
         if (extras == null) {
             /* 初回
             */
-            _placeableList = mutableListOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")
+            _availableList = mutableListOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")
             _game = Game()
             _tableCardData = _game.getStartTableCardData() // 卓上カード 13 * 4 = 52枚
             _playersCardData = _game.getPlayersCardData()  // シャッフル済み 3人のプレイヤーのカード 12 * 4 = 48枚
@@ -56,14 +56,16 @@ class StartFragment : Fragment() {
                 _playersCardData.subList(_playersCardData.size * 2 / 3, _playersCardData.size)
             // プレイする人の分は、ソートして表示するので 管理ID順に並べる
             sort(_playerList)  // ソートずみのリストをアダプターの引数に渡す
-        }
-           /* 初回ここまで
+            /* 初回ここまで
             */
+        } else {
             /* 遷移してきたとき
             */
-        else  {
-            var pTag =  intent.getStringExtra("pTag")!!
-            //
+            _availableList =  intent.getStringArrayListExtra("li") as MutableList<String>
+            val l = _availableList
+            val s = l
+            /* 遷移してきたときここまで
+            */
         }
 
         activity?.let {
@@ -82,7 +84,7 @@ class StartFragment : Fragment() {
                 layoutManager =
                     GridLayoutManager(activity, 16)  // ここはフラグメントなので thisじゃなくて activityプロパティ
                 // アダプターのクラスにデータを渡したいときには、このようにコンストラクタの実引数に渡すことで可能になります
-                adapter = PlayerCardListAdapter(_playerList, _placeableList)  // 第2引数を作って渡しています
+                adapter = PlayerCardListAdapter(_playerList, _availableList)  // 第2引数を作って渡しています
             }
         }
         return view  // フラグメントでは最後必ず viewを返す

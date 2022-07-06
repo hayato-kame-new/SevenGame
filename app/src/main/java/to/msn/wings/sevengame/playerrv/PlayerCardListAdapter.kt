@@ -12,6 +12,7 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import to.msn.wings.sevengame.MainActivity
 import to.msn.wings.sevengame.R
+import java.util.ArrayList
 
 /**
  * コンストラクタの引数を増やしています.
@@ -20,7 +21,7 @@ import to.msn.wings.sevengame.R
  */
 class PlayerCardListAdapter(
     private val data: List<PlayerListItem>,
-    private val placeableList: MutableList<String>
+    private val availableList: MutableList<String>
 ) : RecyclerView.Adapter<PlayerCardViewHolder>() {
 
     // フィールド
@@ -29,12 +30,12 @@ class PlayerCardListAdapter(
    // コンストラクタの引数で渡ってきたものをフィールド値にセットします
     //  変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
    //  ここでは onCreate()の後に呼ばれる onCreateViewHolderの中で 代入をして初期化しています
-    private lateinit var _placeableList :MutableList<String>
+    private lateinit var _availableList :MutableList<String>
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlayerCardViewHolder {
         val cardView : View = LayoutInflater.from(parent.context).inflate(R.layout.player_list_item, parent, false)
         // フィールドへセット
-       _placeableList = placeableList // 引数で渡ってきた値をフィールドへ初期値として代入してる onCreate()をオーバーライドして そこで代入してもいい
+       _availableList = availableList // 引数で渡ってきた値をフィールドへ初期値として代入してる onCreate()をオーバーライドして そこで代入してもいい
 
         return PlayerCardViewHolder(cardView)
     }
@@ -82,21 +83,25 @@ class PlayerCardListAdapter(
         cardView.setOnClickListener {
             val pTag = it.findViewById<TextView>(R.id.pTag)
             Log.i("ok", pTag.text.toString() + "です" + it.toString() + "です クラスは" + it.javaClass)
-            Log.i("ok", _placeableList.contains(pTag.text.toString()).toString())
+            Log.i("ok", _availableList.contains(pTag.text.toString()).toString())
             val context = holder.itemView.context // MainActivity が取得できてる
             // 置けるカードならば遷移します リストの中身との比較で判断する
-            if (_placeableList.contains(pTag.text.toString()) == true) {
+            if (_availableList.contains(pTag.text.toString()) == true) {
                 Log.i("ok", "含まれてる")
-                // 含まれていたら タグを送ります placeableListの中から、削除するため また,プレイヤーリストからも除く 卓上には表示させる
+                // 含まれていたら  placeableListの中から、削除する また,プレイヤーリストからも除く 卓上には表示させる
                 val intent = Intent(context, MainActivity::class.java)  // MainActivityから MainActivityへデータを送り 戻る
-                intent.putExtra("pTag", pTag.text.toString() )
+                _availableList.remove(pTag.text.toString())
+                // キャストが必要です
+                intent.putStringArrayListExtra("li", _availableList as ArrayList<String>)
+               //  intent.putExtra("pTag", pTag.text.toString() )
                 val toast: Toast = Toast.makeText(context, context.getString(R.string.putOn, pTag.text.toString()), Toast.LENGTH_LONG)
                 toast.show()
                 context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
+            } else {
+                // 置けないカードだったら、トースト表示だけ
+                val toast: Toast = Toast.makeText(context, context.getString(R.string.uncontained), Toast.LENGTH_SHORT)
+                toast.show()
             }
-            // 置けないカードだったら、トースト表示だけ
-            val toast: Toast = Toast.makeText(context, context.getString(R.string.uncontained), Toast.LENGTH_SHORT)
-            toast.show()
         }
     }
 
