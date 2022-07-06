@@ -88,12 +88,12 @@ class PlayerCardListAdapter(
             // 置けるカードならば遷移します リストの中身との比較で判断する
             if (_availableList.contains(pTag.text.toString()) == true) {
                 Log.i("ok", "含まれてる")
-                // 含まれていたら  placeableListの中から、削除する また,プレイヤーリストからも除く 卓上には表示させる
+                // 含まれていたら  _availableListの中から、削除する また,プレイヤーリストからも除く 卓上には表示させる
                 val intent = Intent(context, MainActivity::class.java)  // MainActivityから MainActivityへデータを送り 戻る
                 _availableList.remove(pTag.text.toString())
                 // キャストが必要です
-                intent.putStringArrayListExtra("li", _availableList as ArrayList<String>)
-               //  intent.putExtra("pTag", pTag.text.toString() )
+                intent.putStringArrayListExtra("aList", _availableList as ArrayList<String>)
+                 intent.putExtra("pTag", pTag.text.toString() )
                 val toast: Toast = Toast.makeText(context, context.getString(R.string.putOn, pTag.text.toString()), Toast.LENGTH_LONG)
                 toast.show()
                 context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません

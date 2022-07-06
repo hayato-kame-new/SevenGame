@@ -46,9 +46,9 @@ class Game {
                     str = _tagList.get(i) + (j+1).toString()  // これはどうしようか
                     listItem = ListItem(
                         ++count, // 管理IDは １からスタートして連番で振る
-                        0,  // マークは とりあえず 0
-                        "",
-                        0, // マークは とりあえず 0
+                        _markList.get(i),
+                        _numberList.get(j),
+                        _markList.get(i),
                         false,// 卓上に置いていない
                         str  // これも空文字に後で変更しておいた方がいいのかも、でも判定する時に必要かも？？？
                     )
@@ -57,19 +57,21 @@ class Game {
             }
         }
         // あと、ジョーカー1枚を追加する?  しかし、今回ははいらない
-//        var joker = ListItem(53, 5, "JOKER" ,5)  // IDは 1からスタートだから 53
+//        var joker = ListItem(53, 5, "JOKER" ,5, false, "JOKER")  // IDは 1からスタートだから 53
 //        muList.add(joker)
 
         // 可変リストを  toList()により List<ListItem>型に変換しました  アダプターの引数に使うので 型を変換する必要がある
         var tableCardData : List<ListItem> = muList.toList()
 
 //        val data : List<ListItem> = arrayOf(
-//            ListItem(1, 1, "A", 1),
-//            ListItem(2, 1, "2", 1),
-//            ListItem(3, 1, "3", 1),
+//            ListItem(1, 1, "A", 1, false, S1),
+//            ListItem(2, 1, "2", 1, false, S2),
+//            ListItem(3, 1, "3", 1 , false, S3),
 //        ).toList()
         return tableCardData
     }
+
+    // 卓上リストの中に同じタグの物があったら、そのタグの ListItemオブジェクトを 上書きする trueにして
 
     /**
      * ３人でするゲームのトランプ.

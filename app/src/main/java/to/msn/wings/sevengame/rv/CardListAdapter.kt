@@ -59,14 +59,16 @@ class CardListAdapter(private val _data: List<ListItem>) : RecyclerView.Adapter<
         placed.visibility = View.GONE
         tag.visibility = View.GONE
         // バインドするときに data[position].mark.toString() によって 分岐させる
-        // "0" は置かれていないので "" 空文字にする
+
+
+
         when(_data[position].mark.toString()) {
-            "0" -> {  // おかれてないところ
-                mark.visibility = View.GONE  // "0"になってるから 非表示にしておく "0"の値は判断するときに使うので非表示だけする おくときに値を変更する
-                markDown.visibility = View.GONE
-                // cardView.setCardBackgroundColor(null) // nullにはしない方がいい
-                cardView.setCardBackgroundColor(Color.parseColor("#006c3a"))  // 色を重ねがけする方がいい
-            }
+//            "0" -> {  // おかれてないところ
+////                mark.visibility = View.GONE  // "0"になってるから 非表示にしておく "0"の値は判断するときに使うので非表示だけする おくときに値を変更する
+////                markDown.visibility = View.GONE
+//                // cardView.setCardBackgroundColor(null) // nullにはしない方がいい
+//                cardView.setCardBackgroundColor(Color.parseColor("#006c3a"))  // 色を重ねがけする方がいい
+//            }
             "1" -> {
                 mark.setText("♠")
                 markDown.setText("♠")
@@ -83,12 +85,18 @@ class CardListAdapter(private val _data: List<ListItem>) : RecyclerView.Adapter<
                 mark.setText("♧")
                 markDown.setText("♧")
             }
-            else -> {  // "5" JOKERの時です 今回は JOKER無しなので使用していませんが
-                mark.setText("")
-                markDown.setText("")
-            }
+//            else -> {  // "5" JOKERの時です 今回は JOKER無しなので使用していませんが
+//                mark.setText("")
+//                markDown.setText("")
+//            }
         }
-
+        if (_data[position].placed == false) {
+            mark.visibility = View.GONE
+            markDown.visibility = View.GONE
+            numberCenter.visibility = View.GONE
+            // cardView.setCardBackgroundColor(null) // nullにはしない方がいい
+            cardView.setCardBackgroundColor(Color.parseColor("#006c3a"))  // 色を重ねがけする方がいい
+        }
         /**
          * rvを上に被せてると押せる でも、ここでは押せなくてもいい
          */

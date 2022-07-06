@@ -17,7 +17,7 @@ import to.msn.wings.sevengame.rv.ListItem
  * Androidでは、アクティビティとフラグメントのクラスでは、引数なしのコンストラクタを強く推奨していますので、コンストラクタは規定通りにすること
  */
 class StartFragment : Fragment() {
-     // publicにしておく _placeableList は
+     // publicにしておく _availableList は
     lateinit var _availableList : MutableList<String>
   // var _placeableList = mutableListOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")
     // 変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
@@ -33,6 +33,9 @@ class StartFragment : Fragment() {
 //
 //    }
 
+
+    // もしかしたら、
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -41,29 +44,50 @@ class StartFragment : Fragment() {
         val intent = activity?.intent
         val extras = intent?.extras
 
+        // これから _tableCardData  _playersCardData も　_availableList　と同じように作ります
+
+        _game = Game()
+        _tableCardData = _game.getStartTableCardData() // 卓上カード 13 * 4 = 52枚
+        _playersCardData = _game.getPlayersCardData()  // シャッフル済み 3人のプレイヤーのカード 12 * 4 = 48枚
+        // ３当分する
+        _playerList = _playersCardData.subList(0, (_playersCardData.size / 3))
+        _comAList =
+            _playersCardData.subList(_playersCardData.size / 3, _playersCardData.size * 2 / 3)
+        _comBList =
+            _playersCardData.subList(_playersCardData.size * 2 / 3, _playersCardData.size)
+        // プレイする人の分は、ソートして表示するので 管理ID順に並べる
+        sort(_playerList)  // ソートずみのリストをアダプターの引数に渡す
+
+
         if (extras == null) {
             /* 初回
             */
             _availableList = mutableListOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")
-            _game = Game()
-            _tableCardData = _game.getStartTableCardData() // 卓上カード 13 * 4 = 52枚
-            _playersCardData = _game.getPlayersCardData()  // シャッフル済み 3人のプレイヤーのカード 12 * 4 = 48枚
-            // ３当分する
-            _playerList = _playersCardData.subList(0, (_playersCardData.size / 3))
-            _comAList =
-                _playersCardData.subList(_playersCardData.size / 3, _playersCardData.size * 2 / 3)
-            _comBList =
-                _playersCardData.subList(_playersCardData.size * 2 / 3, _playersCardData.size)
-            // プレイする人の分は、ソートして表示するので 管理ID順に並べる
-            sort(_playerList)  // ソートずみのリストをアダプターの引数に渡す
+//            _game = Game()
+//            _tableCardData = _game.getStartTableCardData() // 卓上カード 13 * 4 = 52枚
+//            _playersCardData = _game.getPlayersCardData()  // シャッフル済み 3人のプレイヤーのカード 12 * 4 = 48枚
+//            // ３当分する
+//            _playerList = _playersCardData.subList(0, (_playersCardData.size / 3))
+//            _comAList =
+//                _playersCardData.subList(_playersCardData.size / 3, _playersCardData.size * 2 / 3)
+//            _comBList =
+//                _playersCardData.subList(_playersCardData.size * 2 / 3, _playersCardData.size)
+//            // プレイする人の分は、ソートして表示するので 管理ID順に並べる
+//            sort(_playerList)  // ソートずみのリストをアダプターの引数に渡す
             /* 初回ここまで
             */
         } else {
             /* 遷移してきたとき
             */
-            _availableList =  intent.getStringArrayListExtra("li") as MutableList<String>
-            val l = _availableList
-            val s = l
+            _availableList =  intent.getStringArrayListExtra("aList") as MutableList<String>
+            val pTag : String = intent.getStringExtra("pTag")!!
+            for ( item in _tableCardData) { // 卓上カードのアイテムの属性を変更する
+                if (item.tag.equals(pTag)) {
+                    item.placed = true
+                }
+            }
+
+
             /* 遷移してきたときここまで
             */
         }

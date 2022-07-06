@@ -9,6 +9,6 @@ data class ListItem(
     val mark : Int,  //  1:スペード   2:ハート  3:ダイヤ 3   4:クローバー 5:ジョーカー  0  だとまだ作られてないカード
     val numberCenter : String,
     val markDown : Int,
-    val placed : Boolean,  // 　true: 置いてある false:置いてない
+    var placed : Boolean,  // 　true: 置いてある false:置いてない
     val tag : String
 )
