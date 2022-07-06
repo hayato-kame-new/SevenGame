@@ -18,7 +18,8 @@ import to.msn.wings.sevengame.rv.ListItem
  */
 class StartFragment : Fragment() {
 
-    var _placeableList = mutableListOf<String>("♠6", "♠8", "♥6", "♥8",  "♦6", "♦8", "♣6", "♣8")
+    lateinit var _placeableList : MutableList<String>
+  // var _placeableList = mutableListOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")
     // 変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
     private lateinit var _game : Game
     private lateinit var _tableCardData : List<ListItem>
@@ -37,26 +38,41 @@ class StartFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_start, container, false)
+        val intent = activity?.intent
+        val extras = intent?.extras
 
-        _game = Game()
-        _tableCardData = _game.getStartTableCardData() // 卓上カード 13 * 4 = 52枚
-        _playersCardData = _game.getPlayersCardData()  // シャッフル済み 3人のプレイヤーのカード 12 * 4 = 48枚
-        // ３当分する
-        _playerList = _playersCardData.subList(0, (_playersCardData.size / 3) )
-        _comAList = _playersCardData.subList(_playersCardData.size / 3 , _playersCardData.size * 2/3 )
-        _comBList = _playersCardData.subList(_playersCardData.size * 2/3 , _playersCardData.size)
-        // プレイする人の分は、ソートして表示するので 管理ID順に並べる
-        sort(_playerList)  // ソートずみのリストをアダプターの引数に渡す
-
-
+        if (extras == null) {
+            /* 初回
+            */
+            _placeableList = mutableListOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")
+            _game = Game()
+            _tableCardData = _game.getStartTableCardData() // 卓上カード 13 * 4 = 52枚
+            _playersCardData = _game.getPlayersCardData()  // シャッフル済み 3人のプレイヤーのカード 12 * 4 = 48枚
+            // ３当分する
+            _playerList = _playersCardData.subList(0, (_playersCardData.size / 3))
+            _comAList =
+                _playersCardData.subList(_playersCardData.size / 3, _playersCardData.size * 2 / 3)
+            _comBList =
+                _playersCardData.subList(_playersCardData.size * 2 / 3, _playersCardData.size)
+            // プレイする人の分は、ソートして表示するので 管理ID順に並べる
+            sort(_playerList)  // ソートずみのリストをアダプターの引数に渡す
+        }
+           /* 初回ここまで
+            */
+            /* 遷移してきたとき
+            */
+        else  {
+            var pTag =  intent.getStringExtra("pTag")!!
+            //
+        }
 
         activity?.let {
             view.findViewById<RecyclerView>(R.id.rv).apply {
                 //  this.setHasFixedSize(true)  // あらかじめ固定サイズの場合にパフォーマンス向上
                 layoutManager = GridLayoutManager(activity, 13)  // ここはフラグメントなので thisじゃなくて activityプロパティ
-                // adapter = CardListAdapter(tableCardData)
+                 adapter = CardListAdapter(_tableCardData)
                 // アダプターのクラスにデータを渡したいときには、このようにコンストラクタの実引数に渡すことで可能になります
-                adapter = CardListAdapter(_tableCardData, _placeableList)
+               // adapter = CardListAdapter(_tableCardData, _placeableList)
             }
         }
 
@@ -65,13 +81,11 @@ class StartFragment : Fragment() {
                 //  this.setHasFixedSize(true)  // あらかじめ固定サイズの場合にパフォーマンス向上
                 layoutManager =
                     GridLayoutManager(activity, 16)  // ここはフラグメントなので thisじゃなくて activityプロパティ
-                adapter = PlayerCardListAdapter(_playerList)
+                // アダプターのクラスにデータを渡したいときには、このようにコンストラクタの実引数に渡すことで可能になります
+                adapter = PlayerCardListAdapter(_playerList, _placeableList)  // 第2引数を作って渡しています
             }
         }
-
-
-
-            return view  // フラグメントでは最後必ず viewを返す
+        return view  // フラグメントでは最後必ず viewを返す
     }
 
     /**

@@ -12,5 +12,7 @@
     <color name="cardCream">#ffc</color>
     <color name="cardGreen">#00a760</color>
     <color name="red">#ff0000</color>
-
+    <color name="gainsboro">#dcdcdc</color>
+    <color name="water">#F0F8FF</color>
+    #dcdcdc
 </resources>

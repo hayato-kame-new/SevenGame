@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">SevenGame</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    uncontained
+    <string name="putOn">%1$s カードを置きました</string>
+    <string name="uncontained">そのカードは置けません</string>
+
 </resources>
