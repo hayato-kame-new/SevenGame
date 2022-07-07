@@ -10,7 +10,9 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import to.msn.wings.sevengame.R
 
-
+/**
+ * 卓上テーブル用
+ */
 class CardListAdapter(private val _data: List<ListItem>) : RecyclerView.Adapter<CardViewHolder>() {
 
     // フィールド

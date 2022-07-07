@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Parcelable
 import java.io.Serializable
 /**
- * data class です
+ * data class です.卓上テーブル用
  * RecyclerViewのための
  * import java.io.Serializable  をインポートして Serializableインタフェースを実装しないと intentで送れません
  */
@@ -15,4 +15,4 @@ data class ListItem(
     val markDown : Int,
     var placed : Boolean,  // 　true: 置いてある false:置いてない
     val tag : String
-) : Serializable  // 自作したクラスを アクティビティ間で移動させるためには Serializableインタフェースを実装します
+) : Serializable  // 自作したクラスを intentで送るためには Serializableインタフェースを実装します

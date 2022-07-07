@@ -1,8 +1,9 @@
 package to.msn.wings.sevengame.playerrv
 
+import java.io.Serializable
 /**
- * データクラスです、もし、自作したクラスを アクティビティ間で移動させるためには Serializableインタフェースを実装します.
- * Serializableを実装すべきです.
+ * データクラスです、もし、自作したクラスを  intentで送るためには Serializableインタフェースを実装しなくてはなりません.
+ * 今回は Serializableを実装すべきです.
  * import java.io.Serializable  をインポートします.
  */
 data class PlayerListItem(
@@ -10,4 +11,4 @@ data class PlayerListItem(
     val pNumber : String,
     val pMark : Int,
     var pTag : String
-)
+) : Serializable  // intentで送るためには Serializableを実装すべき

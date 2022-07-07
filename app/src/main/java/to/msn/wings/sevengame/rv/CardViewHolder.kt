@@ -5,6 +5,9 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import to.msn.wings.sevengame.R
 
+/**
+ * 卓上テーブル用
+ */
 class CardViewHolder(itemView : View) : RecyclerView.ViewHolder(itemView) {
     val mark = itemView.findViewById<TextView>(R.id.mark)
     val numberCenter = itemView.findViewById<TextView>(R.id.numberCenter)
