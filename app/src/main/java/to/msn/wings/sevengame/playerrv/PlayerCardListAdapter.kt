@@ -94,11 +94,39 @@ class PlayerCardListAdapter(
             Log.i("ok", txtViewPTag.text.toString() + "です" + it.toString() + "です クラスは" + it.javaClass)
             Log.i("ok", _availableList.contains(txtViewPTag.text.toString()).toString())
             val context = holder.itemView.context // MainActivity が取得できてる
-            // 置けるカードならば遷移します リストの中身との比較で判断する
+
+
+           // まず、availableList 　　Setに作り替えてください！！！ 置けるリスト
+// まず、availableList 　　Setに作り替えてください！！！ 置けるリスト
+
             if (_availableList.contains(txtViewPTag.text.toString()) == true) {
-                // 含まれていたら  _availableListの中から、削除する また,プレイヤーリストからも除く 卓上には表示させる
                 val intent = Intent(context, MainActivity::class.java)  // MainActivityから MainActivityへデータを送り 戻る
-                _availableList.remove(txtViewPTag.text.toString())
+                _availableList.remove(txtViewPTag.text.toString())  // _availableList に含まれていたら リストから削除
+                //  含まれるタグが 8以上 12以下の時には +1の数のカード　   13の時は 1のカード を加える
+                // 含まれるタグが 2以上 6以下の時には -1の数のカード  1の時は 13のカード を加えます
+                val str = (txtViewPTag.text.toString()).substring(0)
+                val num = (txtViewPTag.text.toString()).substring(1).toInt()
+                val rangeMore: IntRange = 8..12
+                val rangeLess: IntRange = 2..6
+                var strNum = ""
+                if (num in rangeMore) {
+                    strNum = (num + 1).toString()  // String型の "9" "10 "11" "12" "13"
+                } else if (num in rangeLess) {
+                    strNum = (num - 1).toString()  // String型の "5" "4" "3" "2" "1"
+                } else if (num == 13) {  // 13を出したら、1しか置けなくなるから
+                    strNum = "1"
+                } else if (num == 1) {  // 1を出したら 13しか置けなくなるから
+                    strNum = "13"
+                }
+                val addStr = str + strNum
+
+  ///     Setに作り替えてください！！！ 置けるリスト add  指定された要素がセット内になかった場合に追加 boolean 追加したら true
+                // addStr が "S1"  だったら、置けるリストの中に、もし スペードで 8以上 13以下のタグがあれば除いてください
+                // そして "S1"を 置けるリストに add してください 指定された要素がセット内になかった場合に追加してくれます
+                //  addStr が "S13" だったら、置けるリストの中に、もし スペードで １以上 ６以下のタグがあれば除いてください
+                // そして "S13"を 置けるリストに add してください
+
+
                 // キャストが必要です
                 intent.putStringArrayListExtra("aList", _availableList as ArrayList<String>)
                 // 卓上カードのアイテムListItemの属性を変更する placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
@@ -114,9 +142,15 @@ class PlayerCardListAdapter(
                 // _deepDataListは　中身は ArrayListだけど 変数の型は Listだから、ダウンキャストしないと removeが使えません
                 val pArrayLi : MutableList<PlayerListItem> = _deepDataList as MutableList<PlayerListItem> // ダウンキャストなので 明示的キャスト
 
-                // java.util.ConcurrentModificationException を回避するために
-                filter(pArrayLi, Predicate { item: PlayerListItem -> item.pTag.equals(txtViewPTag.text) })
-
+                // java.util.ConcurrentModificationException を回避するために forは使わないでください
+                val iterator = pArrayLi.iterator()  // 元のコレクションを書き換えます エラーなしで
+                while (iterator.hasNext()){
+                    val item = iterator.next()
+                    if (item.pTag.equals(txtViewPTag.text)) {
+                        iterator.remove()
+                    }
+                }
+                // イテレータを使用して、元のpArrayLiに変更を加えています。それを intentで送ります
                 // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
                intent.putExtra("pArrayLi", pArrayLi as ArrayList<PlayerListItem>) // putExtraは ArrayList型でないとだめ
 
@@ -125,6 +159,7 @@ class PlayerCardListAdapter(
                 toast.show()
 
                 // 遷移する前に、ここで、コンピューター２つ分の処理もやってしまう。　同じように書く タイマーを使う
+                // 置けるリストも変更すること
 
 
                 context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
@@ -140,16 +175,6 @@ class PlayerCardListAdapter(
         return data.size
     }
 
-    fun <T> filter(list: MutableList<T>, predicate: Predicate<T>) {
-        val itr = list.iterator()
 
-        while (itr.hasNext())
-        {
-            val t = itr.next()
-            if (predicate.test(t)) {
-                itr.remove()
-            }
-        }
-    }
 
 }
