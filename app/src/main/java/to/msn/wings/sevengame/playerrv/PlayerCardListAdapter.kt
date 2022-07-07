@@ -12,6 +12,7 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import to.msn.wings.sevengame.MainActivity
 import to.msn.wings.sevengame.R
+import to.msn.wings.sevengame.rv.ListItem
 import java.util.ArrayList
 
 /**
@@ -21,7 +22,9 @@ import java.util.ArrayList
  */
 class PlayerCardListAdapter(
     private val data: List<PlayerListItem>,
-    private val availableList: MutableList<String>
+    private val availableList: MutableList<String>,
+    private val tableCardData: List<ListItem>,
+  //  private val playerList: MutableList<String>,
 ) : RecyclerView.Adapter<PlayerCardViewHolder>() {
 
     // フィールド
@@ -31,12 +34,13 @@ class PlayerCardListAdapter(
     //  変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
    //  ここでは onCreate()の後に呼ばれる onCreateViewHolderの中で 代入をして初期化しています
     private lateinit var _availableList :MutableList<String>
+    private lateinit var _tableCardData :List<ListItem>
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlayerCardViewHolder {
         val cardView : View = LayoutInflater.from(parent.context).inflate(R.layout.player_list_item, parent, false)
         // フィールドへセット
        _availableList = availableList // 引数で渡ってきた値をフィールドへ初期値として代入してる onCreate()をオーバーライドして そこで代入してもいい
-
+        _tableCardData = tableCardData
         return PlayerCardViewHolder(cardView)
     }
 
@@ -81,20 +85,33 @@ class PlayerCardListAdapter(
         val cardView : CardView = holder.itemView.findViewById(R.id.playerCardView)
         // ラムダ式の中は、innerのついた内部クラスなので、外側のクラスのメンバにアクセスできる (innerがついればアクセスできるから)
         cardView.setOnClickListener {
-            val pTag = it.findViewById<TextView>(R.id.pTag)
-            Log.i("ok", pTag.text.toString() + "です" + it.toString() + "です クラスは" + it.javaClass)
-            Log.i("ok", _availableList.contains(pTag.text.toString()).toString())
+            val txtViewPTag = it.findViewById<TextView>(R.id.pTag)  // ラムダの中で、クリックしたビューのタグを取得する 変数名に気を付ける
+            Log.i("ok", txtViewPTag.text.toString() + "です" + it.toString() + "です クラスは" + it.javaClass)
+            Log.i("ok", _availableList.contains(txtViewPTag.text.toString()).toString())
             val context = holder.itemView.context // MainActivity が取得できてる
             // 置けるカードならば遷移します リストの中身との比較で判断する
-            if (_availableList.contains(pTag.text.toString()) == true) {
-                Log.i("ok", "含まれてる")
+            if (_availableList.contains(txtViewPTag.text.toString()) == true) {
                 // 含まれていたら  _availableListの中から、削除する また,プレイヤーリストからも除く 卓上には表示させる
                 val intent = Intent(context, MainActivity::class.java)  // MainActivityから MainActivityへデータを送り 戻る
-                _availableList.remove(pTag.text.toString())
+                _availableList.remove(txtViewPTag.text.toString())
                 // キャストが必要です
                 intent.putStringArrayListExtra("aList", _availableList as ArrayList<String>)
-                 intent.putExtra("pTag", pTag.text.toString() )
-                val toast: Toast = Toast.makeText(context, context.getString(R.string.putOn, pTag.text.toString()), Toast.LENGTH_LONG)
+
+
+
+                for ( item in _tableCardData) { // 卓上カードのアイテムの属性を変更する
+                    if (item.tag.equals(txtViewPTag.text)) {
+                        item.placed = true
+                    }
+                }
+                for ( item in _tableCardData) { // 卓上カードのアイテムの属性を変更する
+                    Log.i("t" , item.placed.toString() + item.tag.toString())
+                }
+
+              //  intent.putStringArrayListExtra("tList", _tableCardData as ArrayList<String>)
+                intent.putExtra("tList", _tableCardData as ArrayList<ListItem>)
+               //  intent.putExtra("pTag", pTag.text.toString() )
+                val toast: Toast = Toast.makeText(context, context.getString(R.string.putOn, txtViewPTag.text.toString()), Toast.LENGTH_LONG)
                 toast.show()
                 context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             } else {

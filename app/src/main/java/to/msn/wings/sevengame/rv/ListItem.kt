@@ -1,8 +1,12 @@
 package to.msn.wings.sevengame.rv
 
+import android.annotation.SuppressLint
+import android.os.Parcelable
+import java.io.Serializable
 /**
  * data class です
  * RecyclerViewのための
+ * import java.io.Serializable  をインポートして Serializableインタフェースを実装しないと intentで送れません
  */
 data class ListItem(
     val id: Long,  //  識別のための
@@ -11,4 +15,4 @@ data class ListItem(
     val markDown : Int,
     var placed : Boolean,  // 　true: 置いてある false:置いてない
     val tag : String
-)
+) : Serializable

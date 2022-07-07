@@ -22,9 +22,11 @@ class StartFragment : Fragment() {
   // var _placeableList = mutableListOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")
     // 変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
     private lateinit var _game : Game
-    private lateinit var _tableCardData : List<ListItem>
+    // public
+     lateinit var _tableCardData : List<ListItem>
     private lateinit var _playersCardData : ArrayList<PlayerListItem>
-    private lateinit var _playerList : MutableList<PlayerListItem>
+    // public
+     lateinit var _playerList : MutableList<PlayerListItem>
     private lateinit var _comAList : MutableList<PlayerListItem>
     private lateinit var _comBList : MutableList<PlayerListItem>
 
@@ -47,45 +49,54 @@ class StartFragment : Fragment() {
         // これから _tableCardData  _playersCardData も　_availableList　と同じように作ります
 
         _game = Game()
-        _tableCardData = _game.getStartTableCardData() // 卓上カード 13 * 4 = 52枚
-        _playersCardData = _game.getPlayersCardData()  // シャッフル済み 3人のプレイヤーのカード 12 * 4 = 48枚
-        // ３当分する
-        _playerList = _playersCardData.subList(0, (_playersCardData.size / 3))
-        _comAList =
-            _playersCardData.subList(_playersCardData.size / 3, _playersCardData.size * 2 / 3)
-        _comBList =
-            _playersCardData.subList(_playersCardData.size * 2 / 3, _playersCardData.size)
-        // プレイする人の分は、ソートして表示するので 管理ID順に並べる
-        sort(_playerList)  // ソートずみのリストをアダプターの引数に渡す
 
 
         if (extras == null) {
             /* 初回
             */
-            _availableList = mutableListOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")
-//            _game = Game()
-//            _tableCardData = _game.getStartTableCardData() // 卓上カード 13 * 4 = 52枚
-//            _playersCardData = _game.getPlayersCardData()  // シャッフル済み 3人のプレイヤーのカード 12 * 4 = 48枚
-//            // ３当分する
-//            _playerList = _playersCardData.subList(0, (_playersCardData.size / 3))
-//            _comAList =
-//                _playersCardData.subList(_playersCardData.size / 3, _playersCardData.size * 2 / 3)
-//            _comBList =
-//                _playersCardData.subList(_playersCardData.size * 2 / 3, _playersCardData.size)
-//            // プレイする人の分は、ソートして表示するので 管理ID順に並べる
-//            sort(_playerList)  // ソートずみのリストをアダプターの引数に渡す
+            _availableList = mutableListOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")  // フィールドに初期値を代入
+            _tableCardData = _game.getStartTableCardData() // フィールドに初期値を代入
+            _playersCardData = _game.getPlayersCardData() // フィールドに初期値を代入
+
+            // ３当分する
+            _playerList = _playersCardData.subList(0, (_playersCardData.size / 3)) // フィールドに初期値を代入
+            _comAList =
+                _playersCardData.subList(_playersCardData.size / 3, _playersCardData.size * 2 / 3) // フィールドに初期値を代入
+            _comBList =
+                _playersCardData.subList(_playersCardData.size * 2 / 3, _playersCardData.size) // フィールドに初期値を代入
+            // プレイする人の分は、ソートして表示するので 管理ID順に並べる
+            sort(_playerList)  // ソートずみのリストをアダプターの引数に渡す  初回表示
             /* 初回ここまで
             */
         } else {
             /* 遷移してきたとき
             */
+                // フィールドに初期値を代入する
             _availableList =  intent.getStringArrayListExtra("aList") as MutableList<String>
-            val pTag : String = intent.getStringExtra("pTag")!!
-            for ( item in _tableCardData) { // 卓上カードのアイテムの属性を変更する
-                if (item.tag.equals(pTag)) {
-                    item.placed = true
-                }
-            }
+       //     val pTag : String = intent.getStringExtra("pTag")!!
+            // これはここでやらないで
+//            for ( item in _tableCardData) { // 卓上カードのアイテムの属性を変更する
+//                if (item.tag.equals(pTag)) {
+//                    item.placed = true
+//                }
+//            }
+            // フィールドに初期値を代入する
+           //  _tableCardData =  intent.getStringArrayListExtra("tList") as List<ListItem>
+            _tableCardData =  intent.getSerializableExtra("tList") as List<ListItem>
+
+            // ここまでOK
+
+        // ここから変更すること
+//            _playersCardData = _game.getPlayersCardData() // フィールドに初期値を代入
+//
+//            // ３当分する
+//            _playerList = _playersCardData.subList(0, (_playersCardData.size / 3)) // フィールドに初期値を代入
+//            _comAList =
+//                _playersCardData.subList(_playersCardData.size / 3, _playersCardData.size * 2 / 3) // フィールドに初期値を代入
+//            _comBList =
+//                _playersCardData.subList(_playersCardData.size * 2 / 3, _playersCardData.size) // フィールドに初期値を代入
+//            // プレイする人の分は、ソートして表示するので 管理ID順に並べる
+//            sort(_playerList)  // ソートずみのリストをアダプターの引数に渡す  初回表示
 
 
             /* 遷移してきたときここまで
@@ -108,7 +119,7 @@ class StartFragment : Fragment() {
                 layoutManager =
                     GridLayoutManager(activity, 16)  // ここはフラグメントなので thisじゃなくて activityプロパティ
                 // アダプターのクラスにデータを渡したいときには、このようにコンストラクタの実引数に渡すことで可能になります
-                adapter = PlayerCardListAdapter(_playerList, _availableList)  // 第2引数を作って渡しています
+                adapter = PlayerCardListAdapter(_playerList, _availableList, _tableCardData)  // 第2引数を作って渡しています
             }
         }
         return view  // フラグメントでは最後必ず viewを返す
