@@ -104,13 +104,11 @@ class PlayerCardListAdapter(
                         item.placed = true
                     }
                 }
-                for ( item in _tableCardData) { // 卓上カードのアイテムの属性を変更する
-                    Log.i("t" , item.placed.toString() + item.tag.toString())
-                }
 
-              //  intent.putStringArrayListExtra("tList", _tableCardData as ArrayList<String>)
+                // キャストが必要です
+                // さらに List<ListItem> の ListItemは自作のクラスなので、アクティビティ間で移動させるため　intentで送るためには Serializableインタフェースを実装します
                 intent.putExtra("tList", _tableCardData as ArrayList<ListItem>)
-               //  intent.putExtra("pTag", pTag.text.toString() )
+
                 val toast: Toast = Toast.makeText(context, context.getString(R.string.putOn, txtViewPTag.text.toString()), Toast.LENGTH_LONG)
                 toast.show()
                 context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません

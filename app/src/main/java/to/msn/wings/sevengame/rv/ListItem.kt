@@ -15,4 +15,4 @@ data class ListItem(
     val markDown : Int,
     var placed : Boolean,  // 　true: 置いてある false:置いてない
     val tag : String
-) : Serializable
+) : Serializable  // 自作したクラスを アクティビティ間で移動させるためには Serializableインタフェースを実装します
