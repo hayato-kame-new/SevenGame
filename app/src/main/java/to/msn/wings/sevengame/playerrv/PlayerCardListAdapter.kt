@@ -22,7 +22,7 @@ import java.util.function.Predicate
  */
 class PlayerCardListAdapter(
     private val data: List<PlayerListItem>, // 第一引数はRecyclerViewにバインドするデータです
-    private val availableList: MutableList<String>,
+    private val cardSet: Set<String>,
     private val tableCardData: List<ListItem>
 ) : RecyclerView.Adapter<PlayerCardViewHolder>() {
 
@@ -32,7 +32,7 @@ class PlayerCardListAdapter(
    // コンストラクタの引数で渡ってきたものをフィールド値にセットします
     //  変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
    //  ここでは onCreate()の後に呼ばれる onCreateViewHolderの中で 代入をして初期化しています
-    private lateinit var _availableList :MutableList<String>  // 宣言だけ
+    private lateinit var _cardSet :Set<String>  // 宣言だけ
     private lateinit var _tableCardData :List<ListItem>  // 宣言だけ
     // コンストラクタの val data は　読み取り専用だから これも 違う変数名で新しく フィールドとして宣言します
     private lateinit var _deepDataList : List<PlayerListItem>  // 宣言だけ　　onCreateViewHolderの中で 代入をして初期化しています
@@ -40,11 +40,14 @@ class PlayerCardListAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlayerCardViewHolder {
         val cardView : View = LayoutInflater.from(parent.context).inflate(R.layout.player_list_item, parent, false)
         // ここで lateinit varフィールドへ 初期値をセットします
-       _availableList = availableList // 引数で渡ってきた値をフィールドへ初期値として代入してる onCreate()をオーバーライドして そこで代入してもいい
+        // 引数で渡ってきた値をフィールドへ初期値として代入してる onCreate()をオーバーライドして そこで代入してもいい
+        // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！
+        // _cardSet = cardSet
+        _cardSet = HashSet<String>(cardSet)  // ディープコピーすること 同じ参照にしないこと
         _tableCardData = tableCardData
         // _data = data として同じ参照を入れてはいけない!!、バインドが終わるまで dataも変わってしまってはいけないからです ディープコピーをすること！！！
         // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！ 変数の型はList<PlayerListItem>型 中身はArrayList<PlayerListItem>実装クラス型
-         _deepDataList = ArrayList<PlayerListItem>(data)
+         _deepDataList = ArrayList<PlayerListItem>(data) // ディープコピーすること 同じ参照にしないこと
 
         return PlayerCardViewHolder(cardView)
     }
@@ -91,44 +94,85 @@ class PlayerCardListAdapter(
         // ラムダ式の中は、innerのついた内部クラスなので、外側のクラスのメンバにアクセスできる (innerがついればアクセスできるから)
         cardView.setOnClickListener {
             val txtViewPTag = it.findViewById<TextView>(R.id.pTag)  // ラムダの中で、クリックしたビューのタグを取得する 変数名に気を付ける
-            Log.i("ok", txtViewPTag.text.toString() + "です" + it.toString() + "です クラスは" + it.javaClass)
-            Log.i("ok", _availableList.contains(txtViewPTag.text.toString()).toString())
+         //   Log.i("ok", txtViewPTag.text.toString() + "です" + it.toString() + "です クラスは" + it.javaClass)
+
             val context = holder.itemView.context // MainActivity が取得できてる
 
 
-           // まず、availableList 　　Setに作り替えてください！！！ 置けるリスト
-// まず、availableList 　　Setに作り替えてください！！！ 置けるリスト
-
-            if (_availableList.contains(txtViewPTag.text.toString()) == true) {
+            if (_cardSet.contains(txtViewPTag.text.toString()) == true) {
                 val intent = Intent(context, MainActivity::class.java)  // MainActivityから MainActivityへデータを送り 戻る
-                _availableList.remove(txtViewPTag.text.toString())  // _availableList に含まれていたら リストから削除
+               // _availableList.remove(txtViewPTag.text.toString())  // _availableList に含まれていたら リストから削除
+
                 //  含まれるタグが 8以上 12以下の時には +1の数のカード　   13の時は 1のカード を加える
                 // 含まれるタグが 2以上 6以下の時には -1の数のカード  1の時は 13のカード を加えます
-                val str = (txtViewPTag.text.toString()).substring(0)
-                val num = (txtViewPTag.text.toString()).substring(1).toInt()
+                val mark = (txtViewPTag.text.toString()).substring(0, 1)  // "S" とか
+                val numInt = (txtViewPTag.text.toString()).substring(1).toInt()  // 1　とか
                 val rangeMore: IntRange = 8..12
                 val rangeLess: IntRange = 2..6
                 var strNum = ""
-                if (num in rangeMore) {
-                    strNum = (num + 1).toString()  // String型の "9" "10 "11" "12" "13"
-                } else if (num in rangeLess) {
-                    strNum = (num - 1).toString()  // String型の "5" "4" "3" "2" "1"
-                } else if (num == 13) {  // 13を出したら、1しか置けなくなるから
+                if (numInt in rangeMore) {
+                    strNum = (numInt + 1).toString()  // String型の "9" "10 "11" "12" "13"
+                } else if (numInt in rangeLess) {
+                    strNum = (numInt - 1).toString()  // String型の "5" "4" "3" "2" "1"
+                } else if (numInt == 13) {  // 13を出したら、1しか置けなくなるから
                     strNum = "1"
-                } else if (num == 1) {  // 1を出したら 13しか置けなくなるから
+                } else if (numInt == 1) {  // 1を出したら 13しか置けなくなるから
                     strNum = "13"
                 }
-                val addStr = str + strNum
+                val addStr = mark + strNum
 
-  ///     Setに作り替えてください！！！ 置けるリスト add  指定された要素がセット内になかった場合に追加 boolean 追加したら true
-                // addStr が "S1"  だったら、置けるリストの中に、もし スペードで 8以上 13以下のタグがあれば除いてください
+                // addStr が "S1"  だったら、置けるリストの中に 同じマークで 8以上 13以下のタグがあれば除いてください
                 // そして "S1"を 置けるリストに add してください 指定された要素がセット内になかった場合に追加してくれます
                 //  addStr が "S13" だったら、置けるリストの中に、もし スペードで １以上 ６以下のタグがあれば除いてください
                 // そして "S13"を 置けるリストに add してください
 
+                var muSet : MutableSet<String>  = _cardSet as MutableSet<String>
 
-                // キャストが必要です
-                intent.putStringArrayListExtra("aList", _availableList as ArrayList<String>)
+                muSet.add(addStr)  // 追加する
+                // ここまでOK
+                val ite = muSet.iterator()  // 元のコレクションmuSet を書き換えます エラーなしで
+                while (ite.hasNext()){
+                    val item = ite.next()
+                    if (item.equals(txtViewPTag.text.toString())) {
+                        ite.remove()  // MutableSetにしないと remove()が使えない　置いたからそれを削除
+                    }
+
+                }
+             // ここまでの動きはOKです
+                // 1 か 13　が出てきた時にチェックしてください！！
+
+                // もし追加したのが  1  13 だった時には削除しないといけないものがあります
+
+                if (strNum == "1") {  // まだ動き未確認です
+                    while (ite.hasNext()){
+                        val item = ite.next()
+                        var m = item.substring(0 ,1)
+                        var i = item.substring(1)
+                        if (m.equals(mark)) {
+                            if (i.toInt() >= 8 && i.toInt() <= 13) {
+                                ite.remove()  // MutableSetにしないと remove()が使えない　置いたからそれを削除
+                            }
+                        }
+                    }
+                }
+                if (strNum == "13") {  // まだ動き未確認です
+                    while (ite.hasNext()){
+                        val item = ite.next()
+                        var m = item.substring(0, 1)
+                        var i = item.substring(1)
+                        if (m.equals(mark)) {
+                            if (i.toInt() >= 1 && i.toInt() <= 6) {
+                                ite.remove()  // MutableSetにしないと remove()が使えない　置いたからそれを削除
+                            }
+                        }
+                    }
+                }
+
+
+
+                // キャストが必要です Stringは Serializableインタフェースを実装してるので putExtraにそのままで渡せる
+                intent.putExtra("cardSet", muSet as HashSet<String>)
+
                 // 卓上カードのアイテムListItemの属性を変更する placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
                 for (item in _tableCardData) {
                     if (item.tag.equals(txtViewPTag.text)) {

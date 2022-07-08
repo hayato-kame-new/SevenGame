@@ -17,8 +17,8 @@ import to.msn.wings.sevengame.rv.ListItem
  * Androidでは、アクティビティとフラグメントのクラスでは、引数なしのコンストラクタを強く推奨していますので、コンストラクタは規定通りにすること
  */
 class StartFragment : Fragment() {
-     // publicにしておく _availableList は
-    lateinit var _availableList : MutableList<String>
+     // publicにしておく _cardSet は 重複しないSetにする
+    lateinit var _cardSet : HashSet<String>
     // 変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
     private lateinit var _game : Game
     // public
@@ -47,7 +47,7 @@ class StartFragment : Fragment() {
         if (extras == null) {
             /* 初回
             */
-            _availableList = mutableListOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")  // lateinit varフィールドに 初期値を代入
+            _cardSet = hashSetOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")  // lateinit varフィールドに 初期値を代入
             _tableCardData = _game.getStartTableCardData() // lateinit varフィールドに 初期値を代入
             _playersCardData = _game.getPlayersCardData() // lateinit varフィールドに 初期値を代入
 
@@ -65,7 +65,7 @@ class StartFragment : Fragment() {
             /* 遷移してきたとき
             */
                 // lateinit varフィールドに 初期値を代入する
-            _availableList =  intent.getStringArrayListExtra("aList") as MutableList<String>
+            _cardSet =  intent.getSerializableExtra("cardSet") as HashSet<String>
                 // lateinit varフィールドに 初期値を代入する
             _tableCardData =  intent.getSerializableExtra("tList") as List<ListItem>
                 // lateinit varフィールドに 初期値を代入する
@@ -100,7 +100,7 @@ class StartFragment : Fragment() {
                 layoutManager =
                     GridLayoutManager(activity, 16)  // ここはフラグメントなので thisじゃなくて activityプロパティ
                 // アダプターのクラスにデータを渡したいときには、このようにコンストラクタの実引数に渡すことで可能になります 第一引数は、RecycleViewで使うものです
-                adapter = PlayerCardListAdapter(_playerList, _availableList, _tableCardData)  // 第2引数以降に渡しています
+                adapter = PlayerCardListAdapter(_playerList, _cardSet, _tableCardData)  // 第2引数以降に渡しています
             }
         }
         return view  // フラグメントでは最後必ず viewを返す
