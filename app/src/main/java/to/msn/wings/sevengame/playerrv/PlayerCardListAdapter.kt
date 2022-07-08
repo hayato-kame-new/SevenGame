@@ -2,7 +2,6 @@ package to.msn.wings.sevengame.playerrv
 
 import android.content.Intent
 import android.graphics.Color
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,7 +12,9 @@ import androidx.recyclerview.widget.RecyclerView
 import to.msn.wings.sevengame.MainActivity
 import to.msn.wings.sevengame.R
 import to.msn.wings.sevengame.rv.ListItem
-import java.util.function.Predicate
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
 
 /**
  * コンストラクタの引数を増やしています.
@@ -101,7 +102,6 @@ class PlayerCardListAdapter(
 
             if (_cardSet.contains(txtViewPTag.text.toString()) == true) {
                 val intent = Intent(context, MainActivity::class.java)  // MainActivityから MainActivityへデータを送り 戻る
-               // _availableList.remove(txtViewPTag.text.toString())  // _availableList に含まれていたら リストから削除
 
                 //  含まれるタグが 8以上 12以下の時には +1の数のカード　   13の時は 1のカード を加える
                 // 含まれるタグが 2以上 6以下の時には -1の数のカード  1の時は 13のカード を加えます
@@ -122,7 +122,7 @@ class PlayerCardListAdapter(
                 val addStr = mark + strNum
 
                 // addStr が "S1"  だったら、置けるリストの中に 同じマークで 8以上 13以下のタグがあれば除いてください
-                // そして "S1"を 置けるリストに add してください 指定された要素がセット内になかった場合に追加してくれます
+                // そして "S1"を 置けるリストに add してください Setでは指定された要素がセット内になかった場合に追加してくれます 重複はしない
                 //  addStr が "S13" だったら、置けるリストの中に、もし スペードで １以上 ６以下のタグがあれば除いてください
                 // そして "S13"を 置けるリストに add してください
 
@@ -171,7 +171,7 @@ class PlayerCardListAdapter(
 
 
                 // キャストが必要です Stringは Serializableインタフェースを実装してるので putExtraにそのままで渡せる
-                intent.putExtra("cardSet", muSet as HashSet<String>)
+  //////          //    intent.putExtra("cardSet", muSet as HashSet<String>)
 
                 // 卓上カードのアイテムListItemの属性を変更する placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
                 for (item in _tableCardData) {
@@ -182,7 +182,7 @@ class PlayerCardListAdapter(
                 // _tableCardData を ArrayList<ListItem>ダウンキャストが必要です ダウンキャストは　明示的に キャスト演算子を使ってキャストさせます
                 // 注意点 List<ListItem> の ListItemデータクラスは自作のクラスなので、intentで送るためには
                 // ListItemデータクラスは Serializableインタフェースを実装する必要があります
-                intent.putExtra("tList", _tableCardData as ArrayList<ListItem>)  // putExtraのために キャスト
+      //  ////      //  intent.putExtra("tList", _tableCardData as ArrayList<ListItem>)  // putExtraのために キャスト
                 // _deepDataListは　中身は ArrayListだけど 変数の型は Listだから、ダウンキャストしないと removeが使えません
                 val pArrayLi : MutableList<PlayerListItem> = _deepDataList as MutableList<PlayerListItem> // ダウンキャストなので 明示的キャスト
 
@@ -194,18 +194,22 @@ class PlayerCardListAdapter(
                         iterator.remove()
                     }
                 }
-                // イテレータを使用して、元のpArrayLiに変更を加えています。それを intentで送ります
-                // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
-               intent.putExtra("pArrayLi", pArrayLi as ArrayList<PlayerListItem>) // putExtraは ArrayList型でないとだめ
-
                 // トースト表示
                 val toast: Toast = Toast.makeText(context, context.getString(R.string.putOn, txtViewPTag.text.toString()), Toast.LENGTH_LONG)
                 toast.show()
+                // ここまで プレイヤー
+                // ここから comA comB の動き
 
-                // 遷移する前に、ここで、コンピューター２つ分の処理もやってしまう。　同じように書く タイマーを使う
-                // 置けるリストも変更すること
 
 
+
+                // イテレータを使用して、元のpArrayLiに変更を加えています。それを intentで送ります
+                // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
+                intent.putExtra("pArrayLi", pArrayLi as ArrayList<PlayerListItem>) // putExtraは ArrayList型でないとだめ
+                // キャストが必要です Stringは Serializableインタフェースを実装してるので putExtraにそのままで渡せる
+                intent.putExtra("cardSet", muSet as HashSet<String>)
+                intent.putExtra("tList", _tableCardData as ArrayList<ListItem>)  // putExtraのために キャスト
+                // MainActivityへ遷移します
                 context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             } else {
                 // 置けないカードだったら、トースト表示だけ
