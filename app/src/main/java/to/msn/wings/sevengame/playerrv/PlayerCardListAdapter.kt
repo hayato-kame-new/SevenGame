@@ -24,7 +24,9 @@ import kotlin.collections.HashSet
 class PlayerCardListAdapter(
     private val data: List<PlayerListItem>, // 第一引数はRecyclerViewにバインドするデータです
     private val cardSet: Set<String>,
-    private val tableCardData: List<ListItem>
+    private val tableCardData: List<ListItem>,
+    private val comAList : List<PlayerListItem>,
+    private val comBList : List<PlayerListItem>
 ) : RecyclerView.Adapter<PlayerCardViewHolder>() {
 
     // フィールド
@@ -37,6 +39,8 @@ class PlayerCardListAdapter(
     private lateinit var _tableCardData :List<ListItem>  // 宣言だけ
     // コンストラクタの val data は　読み取り専用だから これも 違う変数名で新しく フィールドとして宣言します
     private lateinit var _deepDataList : List<PlayerListItem>  // 宣言だけ　　onCreateViewHolderの中で 代入をして初期化しています
+    private lateinit var _comADeepList : List<PlayerListItem> // 宣言だけ
+    private lateinit var _comBDeepList : List<PlayerListItem> // 宣言だけ
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlayerCardViewHolder {
         val cardView : View = LayoutInflater.from(parent.context).inflate(R.layout.player_list_item, parent, false)
@@ -49,7 +53,8 @@ class PlayerCardListAdapter(
         // _data = data として同じ参照を入れてはいけない!!、バインドが終わるまで dataも変わってしまってはいけないからです ディープコピーをすること！！！
         // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！ 変数の型はList<PlayerListItem>型 中身はArrayList<PlayerListItem>実装クラス型
          _deepDataList = ArrayList<PlayerListItem>(data) // ディープコピーすること 同じ参照にしないこと
-
+         _comADeepList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
+         _comBDeepList = ArrayList<PlayerListItem>(comBList) // ディープコピーすること 同じ参照にしないこと
         return PlayerCardViewHolder(cardView)
     }
 
@@ -99,7 +104,6 @@ class PlayerCardListAdapter(
 
             val context = holder.itemView.context // MainActivity が取得できてる
 
-
             if (_cardSet.contains(txtViewPTag.text.toString()) == true) {
                 val intent = Intent(context, MainActivity::class.java)  // MainActivityから MainActivityへデータを送り 戻る
 
@@ -141,8 +145,6 @@ class PlayerCardListAdapter(
              // ここまでの動きはOKです
                 // 1 か 13　が出てきた時にチェックしてください！！
 
-                // もし追加したのが  1  13 だった時には削除しないといけないものがあります
-
                 if (strNum == "1") {  // まだ動き未確認です
                     while (ite.hasNext()){
                         val item = ite.next()
@@ -169,20 +171,13 @@ class PlayerCardListAdapter(
                 }
 
 
-
-                // キャストが必要です Stringは Serializableインタフェースを実装してるので putExtraにそのままで渡せる
-  //////          //    intent.putExtra("cardSet", muSet as HashSet<String>)
-
                 // 卓上カードのアイテムListItemの属性を変更する placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
                 for (item in _tableCardData) {
                     if (item.tag.equals(txtViewPTag.text)) {
                         item.placed = true
                     }
                 }
-                // _tableCardData を ArrayList<ListItem>ダウンキャストが必要です ダウンキャストは　明示的に キャスト演算子を使ってキャストさせます
-                // 注意点 List<ListItem> の ListItemデータクラスは自作のクラスなので、intentで送るためには
-                // ListItemデータクラスは Serializableインタフェースを実装する必要があります
-      //  ////      //  intent.putExtra("tList", _tableCardData as ArrayList<ListItem>)  // putExtraのために キャスト
+
                 // _deepDataListは　中身は ArrayListだけど 変数の型は Listだから、ダウンキャストしないと removeが使えません
                 val pArrayLi : MutableList<PlayerListItem> = _deepDataList as MutableList<PlayerListItem> // ダウンキャストなので 明示的キャスト
 
@@ -197,8 +192,13 @@ class PlayerCardListAdapter(
                 // トースト表示
                 val toast: Toast = Toast.makeText(context, context.getString(R.string.putOn, txtViewPTag.text.toString()), Toast.LENGTH_LONG)
                 toast.show()
-                // ここまで プレイヤー
-                // ここから comA comB の動き
+
+                // 手持ちのカードが muSetに、存在したら、存在したものをリストで取得し、リストが要素がない空ならば、出せるカードがないのでパスをする
+                // パスは ３回でき、4回目で 負け、負けになれば、手持ちカードを全て出し、ゲームを抜けること
+                // パスをしたら、パスをしましたとトースト表示する パス(残り○回)とトーストに書く パス４回目で 負けましたと表示してあなたが負けたのでここで終了
+
+                // もし、負けたら  ゲームはあなたの負けです でここで ダイアログを表示させて、 ダイアログ上 またゲームをするボタンだけ
+                // を作っておく、またゲームをするボタンを押したら、intentに何もputせずに MainActivityへ遷移すると、初回になる
 
 
 
@@ -208,7 +208,13 @@ class PlayerCardListAdapter(
                 intent.putExtra("pArrayLi", pArrayLi as ArrayList<PlayerListItem>) // putExtraは ArrayList型でないとだめ
                 // キャストが必要です Stringは Serializableインタフェースを実装してるので putExtraにそのままで渡せる
                 intent.putExtra("cardSet", muSet as HashSet<String>)
+                // _tableCardData を ArrayList<ListItem>ダウンキャストが必要です ダウンキャストは　明示的に キャスト演算子を使ってキャストさせます
+                // 注意点 List<ListItem> の ListItemデータクラスは自作のクラスなので、intentで送るためには
+                // ListItemデータクラスは Serializableインタフェースを実装する必要があります
                 intent.putExtra("tList", _tableCardData as ArrayList<ListItem>)  // putExtraのために キャスト
+
+                intent.putExtra("comAList", _comADeepList as ArrayList<ListItem>)
+                intent.putExtra("comBList", _comBDeepList as ArrayList<ListItem>)
                 // MainActivityへ遷移します
                 context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             } else {

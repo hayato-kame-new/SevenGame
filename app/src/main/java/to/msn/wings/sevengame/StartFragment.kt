@@ -26,8 +26,8 @@ class StartFragment : Fragment() {
     private lateinit var _playersCardData : ArrayList<PlayerListItem>
     // public
     lateinit var _playerList : MutableList<PlayerListItem>
-    private lateinit var _comAList : MutableList<PlayerListItem>
-    private lateinit var _comBList : MutableList<PlayerListItem>
+    lateinit var _comAList : MutableList<PlayerListItem>
+    lateinit var _comBList : MutableList<PlayerListItem>
 
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)
@@ -71,20 +71,30 @@ class StartFragment : Fragment() {
                 // lateinit varフィールドに 初期値を代入する
             _playerList = intent.getStringArrayListExtra("pArrayLi") as MutableList<PlayerListItem>  // ArrayListがら変換
 
-            // ここまで完成 _comAList _comBList もアダプターの引数に渡すこと！！同じように引き渡すそして adapterで書き換えたリストを
+            _comAList = intent.getStringArrayListExtra("comAList") as MutableList<PlayerListItem>
+            _comBList = intent.getStringArrayListExtra("comBList") as MutableList<PlayerListItem>
+            // ここまで完成 _comAList _comBList もアダプターの引数に渡すこと！！同じように引き渡す 引き渡して戻すだけ
             // intent.get して lateinit varフィールドに 初期値を代入する 　同じように行う
 
+            // 遷移してきた時に _comAList _cardSet  比べて置けるものが
+            // 存在していたら、その中から、ランダムに選んで起きます。置けなかったら、パスします
+            // 同じように _comBList  もします
+            // アダプターと同じ処理を繰り返し書くので、同じメソッドを使いまわせるように Gameクラスにメソッドを定義して使うようにします。Javaでいうstaticなメソッドを作る
+            // クラス名.メソッド名で呼び出しできるようにします kotlinではstaticメソッドはありません。ただしCompanion Objectsという仕組みを使えば実現できます
 
-//            _comAList =
-//                _playersCardData.subList(_playersCardData.size / 3, _playersCardData.size * 2 / 3) // フィールドに初期値を代入
-//            _comBList =
-//                _playersCardData.subList(_playersCardData.size * 2 / 3, _playersCardData.size) // フィールドに初期値を代入
+            // ここから、comAの動作 comBの動作を書きます。メソッド化して ２回呼ぶように書きます この先プレイヤーが増えても対応できるようにする
+
 
 
 
             /* 遷移してきたときここまで
             */
         }
+
+        // パスボタンを押すと、intentを発行して、_cardSet _tableCardData _playerList _comAList _comBList のデータを送って、このMain Activityへ戻るようにします。
+        // すると　intentにExtraがついてるので elseのブロックへ行きます、つまり、プレイヤーはスキップして、 comA comBの実行になります
+        // パスのカウントするフィールが必要になってきます パスをカウントします ３人分別々の変数が必要
+
 
         activity?.let {
             view.findViewById<RecyclerView>(R.id.rv).apply {
@@ -100,7 +110,7 @@ class StartFragment : Fragment() {
                 layoutManager =
                     GridLayoutManager(activity, 16)  // ここはフラグメントなので thisじゃなくて activityプロパティ
                 // アダプターのクラスにデータを渡したいときには、このようにコンストラクタの実引数に渡すことで可能になります 第一引数は、RecycleViewで使うものです
-                adapter = PlayerCardListAdapter(_playerList, _cardSet, _tableCardData)  // 第2引数以降に渡しています
+                adapter = PlayerCardListAdapter(_playerList, _cardSet, _tableCardData, _comAList , _comBList)  // 第2引数以降に渡しています
             }
         }
         return view  // フラグメントでは最後必ず viewを返す

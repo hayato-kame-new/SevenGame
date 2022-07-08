@@ -76,7 +76,8 @@ class Game {
     /**
      * ３人でするゲームのトランプ.
      * "7"のカードは 最初から卓上に並べてある設定にしてるから 作らない.
-     * Collections.shuffleして変更を加えたら、それを元にして新しいオブジェクトを生成し、そのオブジェクトを返します.
+     * Collections.shuffleして変更を加えたら、それを元にして新しいオブジェクトを生成し、そのオブジェクトを返します.全く別のオブジェクトにする
+     *
      */
     fun getPlayersCardData() : ArrayList<PlayerListItem> {
         // まず可変リストを空で生成しておき、
