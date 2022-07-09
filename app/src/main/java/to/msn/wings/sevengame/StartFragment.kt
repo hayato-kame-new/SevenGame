@@ -1,5 +1,6 @@
 package to.msn.wings.sevengame
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -11,6 +12,8 @@ import to.msn.wings.sevengame.playerrv.PlayerCardListAdapter
 import to.msn.wings.sevengame.playerrv.PlayerListItem
 import to.msn.wings.sevengame.rv.CardListAdapter
 import to.msn.wings.sevengame.rv.ListItem
+import android.widget.Button
+import androidx.core.content.ContextCompat
 
 /**
  * MainActivity上のフラグメントです
@@ -28,12 +31,15 @@ class StartFragment : Fragment() {
     lateinit var _playerList : MutableList<PlayerListItem>
     lateinit var _comAList : MutableList<PlayerListItem>
     lateinit var _comBList : MutableList<PlayerListItem>
+    // private
+    private lateinit var _passBtn : Button
 
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)
 //
 //    }
 
+    @SuppressLint("ResourceAsColor")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -94,6 +100,27 @@ class StartFragment : Fragment() {
         // パスボタンを押すと、intentを発行して、_cardSet _tableCardData _playerList _comAList _comBList のデータを送って、このMain Activityへ戻るようにします。
         // すると　intentにExtraがついてるので elseのブロックへ行きます、つまり、プレイヤーはスキップして、 comA comBの実行になります
         // パスのカウントするフィールが必要になってきます パスをカウントします ３人分別々の変数が必要
+        var playerPassCounter = 3
+//        _passBtn = view.findViewById<Button>(R.id.passBtn)!!
+//        _passBtn.text = "パス 残り " + playerPassCounter.toString() + "回"
+
+        view.findViewById<Button>(R.id.passBtn).also {
+            _passBtn = it!!
+            _passBtn.text = "パス 残り " + playerPassCounter.toString() + "回"  // 最初 3
+        }
+
+        _passBtn.setOnClickListener {
+            if (playerPassCounter == 0) {
+                // あなたの負けです ダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
+                // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
+            }
+            playerPassCounter--
+            _passBtn.text = "パス 残り " + playerPassCounter.toString() + "回"
+            if (playerPassCounter == 0) {
+                _passBtn.text = "ゲームに負ける"
+                _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.lose_btn_color)!!);
+            }
+        }
 
 
         activity?.let {

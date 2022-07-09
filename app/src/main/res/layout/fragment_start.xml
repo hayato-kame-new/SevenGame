@@ -50,7 +50,6 @@
                 android:id="@+id/passBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="パス(残3回)"
                 app:layout_constraintEnd_toStartOf="@+id/ruleBtn"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/txt" />
