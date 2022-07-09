@@ -26,7 +26,8 @@ class PlayerCardListAdapter(
     private val cardSet: Set<String>,
     private val tableCardData: List<ListItem>,
     private val comAList : List<PlayerListItem>,
-    private val comBList : List<PlayerListItem>
+    private val comBList : List<PlayerListItem>,
+    private val _playerPassCounter : Int
 ) : RecyclerView.Adapter<PlayerCardViewHolder>() {
 
     // フィールド
@@ -211,10 +212,11 @@ class PlayerCardListAdapter(
                 // _tableCardData を ArrayList<ListItem>ダウンキャストが必要です ダウンキャストは　明示的に キャスト演算子を使ってキャストさせます
                 // 注意点 List<ListItem> の ListItemデータクラスは自作のクラスなので、intentで送るためには
                 // ListItemデータクラスは Serializableインタフェースを実装する必要があります
-                intent.putExtra("tList", _tableCardData as ArrayList<ListItem>)  // putExtraのために キャスト
+                intent.putExtra("tableList", _tableCardData as ArrayList<ListItem>)  // putExtraのために キャスト
 
                 intent.putExtra("comAList", _comADeepList as ArrayList<ListItem>)
                 intent.putExtra("comBList", _comBDeepList as ArrayList<ListItem>)
+                intent.putExtra("pPassCount", _playerPassCounter)
                 // MainActivityへ遷移します
                 context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             } else {
