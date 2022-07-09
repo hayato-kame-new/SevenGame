@@ -1,6 +1,7 @@
 package to.msn.wings.sevengame
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -66,12 +67,12 @@ class StartFragment : Fragment() {
             _playersCardData = _game.getPlayersCardData() // lateinit varフィールドに 初期値を代入
             _playerPassCounter = 3  // by Delegates.notNull<Int>()フィールドに 初期値を代入
 
-         // lateinit varフィールドに 初期値を代入してる
+            // lateinit varフィールドに 初期値を代入してる
             //      単純な解決策は、指定された範囲の間に存在する元のリストの要素をサブリストに追加することです。
             // getSubListメソッドの中で MutableListオブジェクトを新しく作って返している MutableListにしないとできない
             _playerList = getSubList(_playersCardData, 0, (_playersCardData.size / 3) - 1 ) as ArrayList<PlayerListItem>
-            _comAList = getSubList(_playersCardData, (_playersCardData.size / 3) - 1 , (_playersCardData.size * 2 / 3) - 1) as ArrayList<PlayerListItem>
-            _comBList = getSubList(_playersCardData, (_playersCardData.size * 2 / 3) - 1, _playersCardData.size - 1) as ArrayList<PlayerListItem>
+            _comAList = getSubList(_playersCardData, _playersCardData.size / 3 , (_playersCardData.size * 2 / 3) - 1) as ArrayList<PlayerListItem>
+            _comBList = getSubList(_playersCardData, _playersCardData.size * 2 / 3, _playersCardData.size - 1) as ArrayList<PlayerListItem>
 
             sort(_playerList)  // 管理ID順　ソートずみのリスト　をアダプターの引数に渡す  初回表示
 
@@ -96,7 +97,7 @@ class StartFragment : Fragment() {
             // クラス名.メソッド名で呼び出しできるようにします kotlinではstaticメソッドはありません。ただしCompanion Objectsという仕組みを使えば実現できます
 
             // ここから、comAの動作 comBの動作を書きます。メソッド化して ２回呼ぶように書きます この先プレイヤーが増えても対応できるようにする
-
+// プレイヤー分のパスカウントの変数が必要
 
 
 
@@ -114,42 +115,42 @@ class StartFragment : Fragment() {
         view.findViewById<Button>(R.id.passBtn).also {
             _passBtn = it!!
             _passBtn.text = "パス 残り " + _playerPassCounter.toString() + "回"  // 最初 3
+            if (_playerPassCounter == 0) {
+                _passBtn.text = "ゲームに負ける"
+                _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.lose_btn_color)!!)
+            }
         }
 
         _passBtn.setOnClickListener {
             val intent = Intent(activity, MainActivity::class.java)
             if (_playerPassCounter == 0) {
                 // あなたの負けです ダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
+                AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
+                    .setTitle("あなたの負けです")
+                    .setMessage("ゲーム再開する")
+                    .setPositiveButton("OK", { dialog, which ->
+                        activity?.startActivity(intent)
+                    })
+                    .show()
                 // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
-                activity?.startActivity(intent)
+               // activity?.startActivity(intent)
             } else {
                 // まだゲームは続けられる
                 _playerPassCounter--
-                val s = _playerList
-                val d = s
+
                 _passBtn.text = "パス 残り " + _playerPassCounter.toString() + "回"
                 if (_playerPassCounter == 0) {
                     _passBtn.text = "ゲームに負ける"
-                    _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.lose_btn_color)!!);
+                    _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.lose_btn_color)!!)
                 }
-                // あなたがパスしたから _cardSet _tableCardData _playerList _comAList _comBList _playerPassCounterを intent.putExtraして、またMainActivity elseブロックへ戻ってきます
+                // あなたがパスしたから 6つ intent.putExtraして、またMainActivity elseブロックへ戻ってきます
+                intent.putExtra( "data" ,_playerList)
+                intent.putExtra("cardSet", _cardSet)
 
-
-                // ここを書いてください！！！
-
-//                intent.putExtra("cardSet", muSet as HashSet<String>)
-//          //      val pArrayLi : MutableList<PlayerListItem> = _playerList as MutableList<PlayerListItem>
-//
-//         //       intent.putExtra( "pArrayLi" ,pArrayLi as ArrayList<PlayerListItem>)
-//
-//                intent.putExtra( "tableList" ,_tableCardData as ArrayList<ListItem>)
-//                val comAArrayList = arrayListOf(_comAList)
-//                val comBArrayList = arrayListOf(_comBList)
-//               // intent.putExtra( "comAList", _comAList as ArrayList<PlayerListItem>)
-//               //  intent.putExtra( "comBList", _comBList as ArrayList<PlayerListItem>)
-//                intent.putExtra( "comAList",comAArrayList)
-//                intent.putExtra( "comBList",comBArrayList)
-//                intent.putExtra("pPassCount", _playerPassCounter)
+                intent.putExtra( "tableCardData" ,_tableCardData)
+                 intent.putExtra( "comAList", _comAList)
+                 intent.putExtra( "comBList", _comBList )
+                intent.putExtra("pPassCount", _playerPassCounter)
                 activity?.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             }
         }
