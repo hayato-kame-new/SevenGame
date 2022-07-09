@@ -19,12 +19,14 @@ import kotlin.collections.HashSet
 /**
  * コンストラクタの引数を増やしています.
  * コンストラクタの 第2引数以降を追加して データをフラグメントから受け取る. このクラスのプロパティとしてセットされます.
- *
+ * intent.putExtra する際に 第二引数が ArrayList<E> である必要があるために、なるべく ArrayList<E>を使うようにします (MutableListではなく)
+ * コンストラクタの 型は、将来他の型でも受け取れるように、ポリモーフィズム で　インタフェース型にしてますが、
+ * 中身のオブジェクトは MutableList型ではなく ArrayList型にすること もちろん、重複なしが欲しいなら HashSetでOKです <E>のクラスは、Serializableインタフェースを実装してるので putExtraにそのままで渡せる
  */
 class PlayerCardListAdapter(
     private val data: List<PlayerListItem>, // 第一引数はRecyclerViewにバインドするデータです
-    private val cardSet: Set<String>,
-    private val tableCardData: List<ListItem>,
+    private val cardSet: Set<String>,  // 引数の型はインタフェース型でいい
+    private val tableCardData: List<ListItem>,  // 引数の型はインタフェース型でいい ポリモーフィズム
     private val comAList : List<PlayerListItem>,
     private val comBList : List<PlayerListItem>,
     private val _playerPassCounter : Int
@@ -33,29 +35,29 @@ class PlayerCardListAdapter(
     // フィールド
     private val _isLayoutXLarge = false
 
-   // コンストラクタの引数で渡ってきたものをフィールド値にセットします
+   // 遅延して コンストラクタの引数で渡ってきたものをフィールド値にセットします
     //  変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
    //  ここでは onCreate()の後に呼ばれる onCreateViewHolderの中で 代入をして初期化しています
-    private lateinit var _cardSet :Set<String>  // 宣言だけ
-    private lateinit var _tableCardData :List<ListItem>  // 宣言だけ
+    private lateinit var _deepCardSet: HashSet<String>  // フィールド宣言だけ 　フィールドの型は実装の型にすること
+    private lateinit var _tableCardData: ArrayList<ListItem>  // フィールド宣言だけ フィールドの型は実装の型にすること
     // コンストラクタの val data は　読み取り専用だから これも 違う変数名で新しく フィールドとして宣言します
-    private lateinit var _deepDataList : List<PlayerListItem>  // 宣言だけ　　onCreateViewHolderの中で 代入をして初期化しています
-    private lateinit var _comADeepList : List<PlayerListItem> // 宣言だけ
-    private lateinit var _comBDeepList : List<PlayerListItem> // 宣言だけ
+    private lateinit var _deepDataList: ArrayList<PlayerListItem>  // フィールド宣言だけ　　onCreateViewHolderの中で 代入をして初期化しています フィールドの型は実装の型にすること
+    private lateinit var _deepComAList: ArrayList<PlayerListItem> // フィールド宣言だけ フィールドの型は実装の型にすること
+    private lateinit var _deepComBList: ArrayList<PlayerListItem> // フィールド宣言だけ フィールドの型は実装の型にすること
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlayerCardViewHolder {
         val cardView : View = LayoutInflater.from(parent.context).inflate(R.layout.player_list_item, parent, false)
-        // ここで lateinit varフィールドへ 初期値をセットします
-        // 引数で渡ってきた値をフィールドへ初期値として代入してる onCreate()をオーバーライドして そこで代入してもいい
-        // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！
-        // _cardSet = cardSet
-        _cardSet = HashSet<String>(cardSet)  // ディープコピーすること 同じ参照にしないこと
-        _tableCardData = tableCardData
+        // ここで lateinit varフィールドへ 初期値をセットします (引数で渡ってきた値を使って)
+        // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！ ディープコピーにしないとエラー _cardSet = cardSet としてはいけない バインドが終わるまで cardSetも変わってしまってはいけないからです
+        _deepCardSet = HashSet<String>(cardSet)  // ディープコピーすること (同じ参照にしないこと)
+        // 中身は同じ ArrayListですが、引数で渡ってきた方はインタフェースの型の変数に入れていますので、ダウンキャストするには明示的なキャストが必要です
+        // _tableCardData　要素の属性だけを変更するだけだから ディープコピーしなくてもいい 同じ参照のままでいい
+        _tableCardData = tableCardData as ArrayList<ListItem>
         // _data = data として同じ参照を入れてはいけない!!、バインドが終わるまで dataも変わってしまってはいけないからです ディープコピーをすること！！！
         // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！ 変数の型はList<PlayerListItem>型 中身はArrayList<PlayerListItem>実装クラス型
          _deepDataList = ArrayList<PlayerListItem>(data) // ディープコピーすること 同じ参照にしないこと
-         _comADeepList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
-         _comBDeepList = ArrayList<PlayerListItem>(comBList) // ディープコピーすること 同じ参照にしないこと
+         _deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
+         _deepComBList = ArrayList<PlayerListItem>(comBList) // ディープコピーすること 同じ参照にしないこと
         return PlayerCardViewHolder(cardView)
     }
 
@@ -105,7 +107,7 @@ class PlayerCardListAdapter(
 
             val context = holder.itemView.context // MainActivity が取得できてる
 
-            if (_cardSet.contains(txtViewPTag.text.toString()) == true) {
+            if (_deepCardSet.contains(txtViewPTag.text.toString()) == true) {
                 val intent = Intent(context, MainActivity::class.java)  // MainActivityから MainActivityへデータを送り 戻る
 
                 //  含まれるタグが 8以上 12以下の時には +1の数のカード　   13の時は 1のカード を加える
@@ -131,15 +133,16 @@ class PlayerCardListAdapter(
                 //  addStr が "S13" だったら、置けるリストの中に、もし スペードで １以上 ６以下のタグがあれば除いてください
                 // そして "S13"を 置けるリストに add してください
 
-                var muSet : MutableSet<String>  = _cardSet as MutableSet<String>
+          //      var muSet : MutableSet<String>  = _cardSet as MutableSet<String>
 
-                muSet.add(addStr)  // 追加する
-                // ここまでOK
-                val ite = muSet.iterator()  // 元のコレクションmuSet を書き換えます エラーなしで
+
+                _deepCardSet.add(addStr)  // 追加する
+                // java.util.ConcurrentModificationException を回避するために forは使わないでください
+                val ite = _deepCardSet.iterator()  // _deepCardSet を書き換えます イテレータを使えばエラーなしでできる
                 while (ite.hasNext()){
                     val item = ite.next()
                     if (item.equals(txtViewPTag.text.toString())) {
-                        ite.remove()  // MutableSetにしないと remove()が使えない　置いたからそれを削除
+                        ite.remove()
                     }
 
                 }
@@ -153,7 +156,7 @@ class PlayerCardListAdapter(
                         var i = item.substring(1)
                         if (m.equals(mark)) {
                             if (i.toInt() >= 8 && i.toInt() <= 13) {
-                                ite.remove()  // MutableSetにしないと remove()が使えない　置いたからそれを削除
+                                ite.remove()
                             }
                         }
                     }
@@ -165,7 +168,7 @@ class PlayerCardListAdapter(
                         var i = item.substring(1)
                         if (m.equals(mark)) {
                             if (i.toInt() >= 1 && i.toInt() <= 6) {
-                                ite.remove()  // MutableSetにしないと remove()が使えない　置いたからそれを削除
+                                ite.remove()
                             }
                         }
                     }
@@ -179,11 +182,12 @@ class PlayerCardListAdapter(
                     }
                 }
 
-                // _deepDataListは　中身は ArrayListだけど 変数の型は Listだから、ダウンキャストしないと removeが使えません
-                val pArrayLi : MutableList<PlayerListItem> = _deepDataList as MutableList<PlayerListItem> // ダウンキャストなので 明示的キャスト
+
+            //    val pArrayLi : MutableList<PlayerListItem> = _deepDataList as MutableList<PlayerListItem> // ダウンキャストなので 明示的キャスト
+
 
                 // java.util.ConcurrentModificationException を回避するために forは使わないでください
-                val iterator = pArrayLi.iterator()  // 元のコレクションを書き換えます エラーなしで
+                val iterator = _deepDataList.iterator()  // 元のコレクションを書き換えます エラーなしで
                 while (iterator.hasNext()){
                     val item = iterator.next()
                     if (item.pTag.equals(txtViewPTag.text)) {
@@ -204,19 +208,19 @@ class PlayerCardListAdapter(
 
 
 
-                // イテレータを使用して、元のpArrayLiに変更を加えています。それを intentで送ります
                 // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
-                intent.putExtra("pArrayLi", pArrayLi as ArrayList<PlayerListItem>) // putExtraは ArrayList型でないとだめ
-                // キャストが必要です Stringは Serializableインタフェースを実装してるので putExtraにそのままで渡せる
-                intent.putExtra("cardSet", muSet as HashSet<String>)
-                // _tableCardData を ArrayList<ListItem>ダウンキャストが必要です ダウンキャストは　明示的に キャスト演算子を使ってキャストさせます
-                // 注意点 List<ListItem> の ListItemデータクラスは自作のクラスなので、intentで送るためには
-                // ListItemデータクラスは Serializableインタフェースを実装する必要があります
-                intent.putExtra("tableList", _tableCardData as ArrayList<ListItem>)  // putExtraのために キャスト
+                intent.putExtra("data", _deepDataList as ArrayList<PlayerListItem> )
+                //  Stringは Serializableインタフェースを実装してるので putExtraに渡せる
+                intent.putExtra("cardSet", _deepCardSet as HashSet<String>)
+                // 注意点 putExtraは ArrayList型でないとだめ
+                // 注意点 ListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要があります
+                intent.putExtra("tableCardData", _tableCardData as ArrayList<ListItem>)
 
-                intent.putExtra("comAList", _comADeepList as ArrayList<ListItem>)
-                intent.putExtra("comBList", _comBDeepList as ArrayList<ListItem>)
-                intent.putExtra("pPassCount", _playerPassCounter)
+
+
+                intent.putExtra("comAList", _deepComAList as ArrayList<PlayerListItem>)
+                intent.putExtra("comBList", _deepComBList as ArrayList<PlayerListItem>)
+                intent.putExtra("pPassCount", _playerPassCounter)  // そのまま渡すだけ
                 // MainActivityへ遷移します
                 context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             } else {

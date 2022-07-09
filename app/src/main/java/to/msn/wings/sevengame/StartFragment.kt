@@ -1,7 +1,9 @@
 package to.msn.wings.sevengame
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -19,6 +21,7 @@ import kotlin.properties.Delegates
 /**
  * MainActivity上のフラグメントです
  * Androidでは、アクティビティとフラグメントのクラスでは、引数なしのコンストラクタを強く推奨していますので、コンストラクタは規定通りにすること
+ * intent.putExtra する際に 第二引数が ArrayList<E> である必要があるために、なるべく ArrayList<E>を使うようにします (MutableListではなく)
  */
 class StartFragment : Fragment() {
      // publicにしておく _cardSet は 重複しないSetにする
@@ -26,12 +29,12 @@ class StartFragment : Fragment() {
     // 変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
     private lateinit var _game : Game
     // public
-    lateinit var _tableCardData : List<ListItem>
+    lateinit var _tableCardData : ArrayList<ListItem>
     private lateinit var _playersCardData : ArrayList<PlayerListItem>
-    // public
-    lateinit var _playerList : MutableList<PlayerListItem>
-    lateinit var _comAList : MutableList<PlayerListItem>
-    lateinit var _comBList : MutableList<PlayerListItem>
+    // public 基本MutableListを使うが ここでは putExtraをする時に、ArrayList　に明示的にキャストしたりしないといけなくなるから ArrayListを使う
+    lateinit var _playerList : ArrayList<PlayerListItem>
+    lateinit var _comAList : ArrayList<PlayerListItem>
+    lateinit var _comBList : ArrayList<PlayerListItem>
     // private
     private lateinit var _passBtn : Button
     // public  lateinit var は　Intには使えない    by Delegates.notNull<Int>() を使う
@@ -53,20 +56,22 @@ class StartFragment : Fragment() {
 
         _game = Game()
 
+
         if (extras == null) {
             /* 初回
             */
+            // lateinit varフィールドに 初期値を代入
             _cardSet = hashSetOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")  // lateinit varフィールドに 初期値を代入
             _tableCardData = _game.getStartTableCardData() // lateinit varフィールドに 初期値を代入
             _playersCardData = _game.getPlayersCardData() // lateinit varフィールドに 初期値を代入
             _playerPassCounter = 3  // by Delegates.notNull<Int>()フィールドに 初期値を代入
 
-            // ３当分する
-            _playerList = _playersCardData.subList(0, (_playersCardData.size / 3)) // lateinit varフィールドに 初期値を代入
-            _comAList =
-                _playersCardData.subList(_playersCardData.size / 3, _playersCardData.size * 2 / 3) // lateinit varフィールドに 初期値を代入
-            _comBList =
-                _playersCardData.subList(_playersCardData.size * 2 / 3, _playersCardData.size) // lateinit varフィールドに 初期値を代入
+         // lateinit varフィールドに 初期値を代入してる
+            //      単純な解決策は、指定された範囲の間に存在する元のリストの要素をサブリストに追加することです。
+            // getSubListメソッドの中で MutableListオブジェクトを新しく作って返している MutableListにしないとできない
+            _playerList = getSubList(_playersCardData, 0, (_playersCardData.size / 3) - 1 ) as ArrayList<PlayerListItem>
+            _comAList = getSubList(_playersCardData, (_playersCardData.size / 3) - 1 , (_playersCardData.size * 2 / 3) - 1) as ArrayList<PlayerListItem>
+            _comBList = getSubList(_playersCardData, (_playersCardData.size * 2 / 3) - 1, _playersCardData.size - 1) as ArrayList<PlayerListItem>
 
             sort(_playerList)  // 管理ID順　ソートずみのリスト　をアダプターの引数に渡す  初回表示
 
@@ -76,21 +81,16 @@ class StartFragment : Fragment() {
         } else {
             /* 遷移してきたとき
             */
-                // lateinit varフィールドに 初期値を代入する
+            // lateinit varフィールドに 初期値を代入する
+            _playerList = intent.getSerializableExtra("data") as ArrayList<PlayerListItem>
             _cardSet =  intent.getSerializableExtra("cardSet") as HashSet<String>
-                // lateinit varフィールドに 初期値を代入する
-            _tableCardData =  intent.getSerializableExtra("tableList") as List<ListItem>
-                // lateinit varフィールドに 初期値を代入する
-            _playerList = intent.getStringArrayListExtra("pArrayLi") as MutableList<PlayerListItem>  // ArrayListがら変換
+            _tableCardData = intent.getSerializableExtra("tableCardData") as ArrayList<ListItem>
+            _comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
+            _comBList = intent.getStringArrayListExtra("comBList") as ArrayList<PlayerListItem>
+            _playerPassCounter = intent.getIntExtra("pPassCount", 0)
 
-            _comAList = intent.getStringArrayListExtra("comAList") as MutableList<PlayerListItem>
-            _comBList = intent.getStringArrayListExtra("comBList") as MutableList<PlayerListItem>
-            // ここまで完成 _comAList _comBList もアダプターの引数に渡すこと！！同じように引き渡す 引き渡して戻すだけ
-            // intent.get して lateinit varフィールドに 初期値を代入する 　同じように行う
-            _playerPassCounter = intent.getIntExtra("pPassCount", 0)  // 取れなかった時に使う第二引数が必要になってくる
-
-            // 遷移してきた時に _comAList _cardSet  比べて置けるものが "pPassCount"
-            // 存在していたら、その中から、ランダムに選んで起きます。置けなかったら、パスします
+            // comA comBの番です 遷移してきた時に _comAList _cardSet  比べて置けるものが  存在していたら、その中から、ランダムに選んで起きます。
+            // 置けなかったら、パスします
             // 同じように _comBList  もします
             // アダプターと同じ処理を繰り返し書くので、同じメソッドを使いまわせるように Gameクラスにメソッドを定義して使うようにします。Javaでいうstaticなメソッドを作る
             // クラス名.メソッド名で呼び出しできるようにします kotlinではstaticメソッドはありません。ただしCompanion Objectsという仕組みを使えば実現できます
@@ -117,23 +117,41 @@ class StartFragment : Fragment() {
         }
 
         _passBtn.setOnClickListener {
+            val intent = Intent(activity, MainActivity::class.java)
             if (_playerPassCounter == 0) {
                 // あなたの負けです ダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
                 // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
+                activity?.startActivity(intent)
+            } else {
+                // まだゲームは続けられる
+                _playerPassCounter--
+                val s = _playerList
+                val d = s
+                _passBtn.text = "パス 残り " + _playerPassCounter.toString() + "回"
+                if (_playerPassCounter == 0) {
+                    _passBtn.text = "ゲームに負ける"
+                    _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.lose_btn_color)!!);
+                }
+                // あなたがパスしたから _cardSet _tableCardData _playerList _comAList _comBList _playerPassCounterを intent.putExtraして、またMainActivity elseブロックへ戻ってきます
+
+
+                // ここを書いてください！！！
+
+//                intent.putExtra("cardSet", muSet as HashSet<String>)
+//          //      val pArrayLi : MutableList<PlayerListItem> = _playerList as MutableList<PlayerListItem>
+//
+//         //       intent.putExtra( "pArrayLi" ,pArrayLi as ArrayList<PlayerListItem>)
+//
+//                intent.putExtra( "tableList" ,_tableCardData as ArrayList<ListItem>)
+//                val comAArrayList = arrayListOf(_comAList)
+//                val comBArrayList = arrayListOf(_comBList)
+//               // intent.putExtra( "comAList", _comAList as ArrayList<PlayerListItem>)
+//               //  intent.putExtra( "comBList", _comBList as ArrayList<PlayerListItem>)
+//                intent.putExtra( "comAList",comAArrayList)
+//                intent.putExtra( "comBList",comBArrayList)
+//                intent.putExtra("pPassCount", _playerPassCounter)
+                activity?.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             }
-            // まだゲームは続けられる
-            _playerPassCounter--
-            _passBtn.text = "パス 残り " + _playerPassCounter.toString() + "回"
-            if (_playerPassCounter == 0) {
-                _passBtn.text = "ゲームに負ける"
-                _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.lose_btn_color)!!);
-            }
-            // あなたがパスしたから _cardSet _tableCardData _playerList _comAList _comBList _playerPassCounterを intent.putExtraして、またMainActivity elseブロックへ戻ってきます
-        // そして comA comBが実行する
-        // intent 送る時に _cardSet　は MutableSetにしないといけないから
-
-
-
         }
 
 
@@ -171,6 +189,17 @@ class StartFragment : Fragment() {
             }
         }
     }
+
+    /**
+     * 新しくオブジェクトを作り直して ディープコピーをする MutableListじゃないとだめ
+     */
+        fun <T> getSubList(list: List<T>, start: Int, end: Int): List<T>? {
+        val subList: MutableList<T> = ArrayList()  // MutableList
+        for (i in start..end) {
+            subList.add(list[i])
+        }
+        return subList
+        }
 
 
 
