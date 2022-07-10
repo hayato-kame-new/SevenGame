@@ -16,6 +16,7 @@ import to.msn.wings.sevengame.playerrv.PlayerListItem
 import to.msn.wings.sevengame.rv.CardListAdapter
 import to.msn.wings.sevengame.rv.ListItem
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import java.util.*
@@ -41,13 +42,14 @@ class StartFragment : Fragment() {
     lateinit var _playerList : ArrayList<PlayerListItem>
     lateinit var _comAList : ArrayList<PlayerListItem>
     lateinit var _comBList : ArrayList<PlayerListItem>
-    // private
-    private lateinit var _passBtn : Button
     // public  lateinit var は　Intには使えない    by Delegates.notNull<Int>() を使う
     var _playerPassCounter by Delegates.notNull<Int>()
     var _comAPassCounter by Delegates.notNull<Int>()
     var _comBPassCounter by Delegates.notNull<Int>()
-
+    // private
+    private lateinit var _passBtn : Button
+    private lateinit var _aTxt : TextView
+    private lateinit var _bTxt : TextView
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)
 //
@@ -59,6 +61,7 @@ class StartFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_start, container, false)
+
         val intent = activity?.intent
         val extras = intent?.extras
 
@@ -99,21 +102,12 @@ class StartFragment : Fragment() {
         //    _comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
             _comBList = intent.getStringArrayListExtra("comBList") as ArrayList<PlayerListItem>
             _playerPassCounter = intent.getIntExtra("pPassCount", 0)
-            _comAPassCounter = intent.getIntExtra("pPassCount", 0)
-            _comBPassCounter = intent.getIntExtra("pPassCount", 0)
+            _comAPassCounter = intent.getIntExtra("comAPassCount", 0)
+            _comBPassCounter = intent.getIntExtra("comBPassCount", 0)
 
-            // comA comBの番です 遷移してきた時に _comAList _cardSet  比べて置けるものが  存在していたら、その中から、ランダムに選んで起きます。
-            // 置けなかったら、パスします
-            // 同じように _comBList  もします
             // アダプターと同じ処理を繰り返し書くので、同じメソッドを使いまわせるように Gameクラスにメソッドを定義して使うようにします。Javaでいうstaticなメソッドを作る
             // クラス名.メソッド名で呼び出しできるようにします kotlinではstaticメソッドはありません。ただしCompanion Objectsという仕組みを使えば実現できます
-
-            // ここから、comAの動作 comBの動作を書きます。メソッド化して ２回呼ぶように書きます この先プレイヤーが増えても対応できるようにする
-// プレイヤー分のパスカウントの変数が必要
-            // まず、選ぶ、選べなかったらパスをする
-            // _cardSetの中に持ち手のがあるかどうか メソッド化する _comAList から 新しいリストを作る
                 // まずAから
-        //    val subSet = getSubSet(_cardSet, _comAList)
             val subSet = getSubSet(cardSet, comAList)
             var putStr = ""
             var randomIndex = 0
@@ -127,8 +121,6 @@ class StartFragment : Fragment() {
                     }
                     counter++
                 }
-                // この putStrが出すやつ  str "D5" とかが入ってくる
-             //   _cardSet　から この putStrを除いて 次のを加える作業をしてください
                 // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！ ディープコピーにしないとエラー _cardSet = cardSet としてはいけない バインドが終わるまで cardSetも変わってしまってはいけないからです
               val _deepCardSet = HashSet<String>(cardSet)  // ディープコピーすること (同じ参照にしないこと)
 
@@ -204,7 +196,6 @@ class StartFragment : Fragment() {
                 _comAList = ArrayList<PlayerListItem>(_deepComAList) // ディープコピーすること 同じ参照にしないこと
 
 
-
                 // 卓上リストを　　trueにして表示されるようにしてください
                 // 卓上カードのアイテムListItemの属性を変更する placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
                 for (item in _tableCardData) {  // 要素の属性を操作してるだけだから、元のコレクションがそのまま使える
@@ -212,9 +203,6 @@ class StartFragment : Fragment() {
                         item.placed = true
                     }
                 }
-
-
-
                 // トースト表示
                 val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comAPutOn, putStr), Toast.LENGTH_SHORT)
                 toast.show()
@@ -239,6 +227,8 @@ class StartFragment : Fragment() {
             */
         }
 
+
+
         // パスボタンを押すと、intentを発行して、_cardSet _tableCardData _playerList _comAList _comBList のデータを送って、このMain Activityへ戻るようにします。
         // すると　intentにExtraがついてるので elseのブロックへ行きます、つまり、プレイヤーはスキップして、 comA comBの実行になります
         // パスのカウントするフィールが必要になってきます パスをカウントします ３人分別々の変数が必要
@@ -251,7 +241,7 @@ class StartFragment : Fragment() {
             _passBtn.text = "パス 残り " + _playerPassCounter.toString() + "回"  // 最初 3
             if (_playerPassCounter == 0) {
                 _passBtn.text = "ゲームに負ける"
-                _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.lose_btn_color)!!)
+                _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
             }
         }
 
@@ -275,7 +265,7 @@ class StartFragment : Fragment() {
                 _passBtn.text = "パス 残り " + _playerPassCounter.toString() + "回"
                 if (_playerPassCounter == 0) {
                     _passBtn.text = "ゲームに負ける"
-                    _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.lose_btn_color)!!)
+                    _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
                 }
                 // あなたがパスしたから 8つ intent.putExtraして、またMainActivity elseブロックへ戻ってきます
                 intent.putExtra( "data" ,_playerList)
@@ -288,6 +278,26 @@ class StartFragment : Fragment() {
                 intent.putExtra("comAPassCount", _comAPassCounter)
                 intent.putExtra("comBPassCount", _comBPassCounter)
                 activity?.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
+            }
+        }
+
+        view.findViewById<TextView>(R.id.aTxt).also {
+            _aTxt = it!!
+            _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"  // 最初 3
+            _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
+            if (_comAPassCounter == 0) {
+                _aTxt.text = "コンピューターA パス 残りなし"
+                _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
+            }
+        }
+
+        view.findViewById<TextView>(R.id.bTxt).also {
+            _bTxt = it!!
+            _bTxt.text = "コンピューターBは パス 残り " + _comBPassCounter.toString() + "回"  // 最初 3
+            _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comBColor)!!)
+            if (_comBPassCounter == 0) {
+                _bTxt.text = "コンピューターB パス 残りなし"
+                _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
             }
         }
 

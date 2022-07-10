@@ -15,6 +15,8 @@
     <color name="red">#ff0000</color>
     <color name="gainsboro">#dcdcdc</color>
     <color name="water">#F0F8FF</color>
-    <color name="lose_btn_color">#E4007F</color>
+    <color name="danger">#E4007F</color>
+    <color name="comAColor">#FEEEED</color>
+    <color name="comBColor">#F0F8FF</color>
 
 </resources>
