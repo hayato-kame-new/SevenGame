@@ -40,6 +40,8 @@ class StartFragment : Fragment() {
     private lateinit var _passBtn : Button
     // public  lateinit var は　Intには使えない    by Delegates.notNull<Int>() を使う
     var _playerPassCounter by Delegates.notNull<Int>()
+    var _comAPassCounter by Delegates.notNull<Int>()
+    var _comBPassCounter by Delegates.notNull<Int>()
 
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)
@@ -66,7 +68,8 @@ class StartFragment : Fragment() {
             _tableCardData = _game.getStartTableCardData() // lateinit varフィールドに 初期値を代入
             _playersCardData = _game.getPlayersCardData() // lateinit varフィールドに 初期値を代入
             _playerPassCounter = 3  // by Delegates.notNull<Int>()フィールドに 初期値を代入
-
+            _comAPassCounter = 3  // by Delegates.notNull<Int>()フィールドに 初期値を代入
+            _comBPassCounter = 3  // by Delegates.notNull<Int>()フィールドに 初期値を代入
             // lateinit varフィールドに 初期値を代入してる
             //      単純な解決策は、指定された範囲の間に存在する元のリストの要素をサブリストに追加することです。
             // getSubListメソッドの中で MutableListオブジェクトを新しく作って返している MutableListにしないとできない
@@ -89,6 +92,8 @@ class StartFragment : Fragment() {
             _comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
             _comBList = intent.getStringArrayListExtra("comBList") as ArrayList<PlayerListItem>
             _playerPassCounter = intent.getIntExtra("pPassCount", 0)
+            _comAPassCounter = intent.getIntExtra("pPassCount", 0)
+            _comBPassCounter = intent.getIntExtra("pPassCount", 0)
 
             // comA comBの番です 遷移してきた時に _comAList _cardSet  比べて置けるものが  存在していたら、その中から、ランダムに選んで起きます。
             // 置けなかったら、パスします
@@ -98,6 +103,7 @@ class StartFragment : Fragment() {
 
             // ここから、comAの動作 comBの動作を書きます。メソッド化して ２回呼ぶように書きます この先プレイヤーが増えても対応できるようにする
 // プレイヤー分のパスカウントの変数が必要
+
 
 
 
@@ -143,7 +149,7 @@ class StartFragment : Fragment() {
                     _passBtn.text = "ゲームに負ける"
                     _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.lose_btn_color)!!)
                 }
-                // あなたがパスしたから 6つ intent.putExtraして、またMainActivity elseブロックへ戻ってきます
+                // あなたがパスしたから 8つ intent.putExtraして、またMainActivity elseブロックへ戻ってきます
                 intent.putExtra( "data" ,_playerList)
                 intent.putExtra("cardSet", _cardSet)
 
@@ -151,6 +157,8 @@ class StartFragment : Fragment() {
                  intent.putExtra( "comAList", _comAList)
                  intent.putExtra( "comBList", _comBList )
                 intent.putExtra("pPassCount", _playerPassCounter)
+                intent.putExtra("comAPassCount", _comAPassCounter)
+                intent.putExtra("comBPassCount", _comBPassCounter)
                 activity?.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             }
         }
@@ -170,7 +178,7 @@ class StartFragment : Fragment() {
                 layoutManager =
                     GridLayoutManager(activity, 16)  // ここはフラグメントなので thisじゃなくて activityプロパティ
                 // アダプターのクラスにデータを渡したいときには、このようにコンストラクタの実引数に渡すことで可能になります 第一引数は、RecycleViewで使うものです
-                adapter = PlayerCardListAdapter(_playerList, _cardSet, _tableCardData, _comAList , _comBList, _playerPassCounter)  // 第2引数以降に渡しています
+                adapter = PlayerCardListAdapter(_playerList, _cardSet, _tableCardData, _comAList , _comBList, _playerPassCounter ,_comAPassCounter, _comBPassCounter)  // 第2引数以降に渡しています
             }
         }
         return view  // フラグメントでは最後必ず viewを返す

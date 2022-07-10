@@ -29,7 +29,9 @@ class PlayerCardListAdapter(
     private val tableCardData: List<ListItem>,  // 引数の型はインタフェース型でいい ポリモーフィズム
     private val comAList : List<PlayerListItem>,
     private val comBList : List<PlayerListItem>,
-    private val _playerPassCounter : Int
+    private val _playerPassCounter : Int,
+    private val _comAPassCounter : Int,
+    private val _comBPassCounter : Int
 ) : RecyclerView.Adapter<PlayerCardViewHolder>() {
 
     // フィールド
@@ -221,6 +223,8 @@ class PlayerCardListAdapter(
                 intent.putExtra("comAList", _deepComAList as ArrayList<PlayerListItem>)
                 intent.putExtra("comBList", _deepComBList as ArrayList<PlayerListItem>)
                 intent.putExtra("pPassCount", _playerPassCounter)  // そのまま渡すだけ
+                intent.putExtra("comAPassCount", _comAPassCounter)  // そのまま渡すだけ
+                intent.putExtra("comBPassCount", _comBPassCounter)  // そのまま渡すだけ
                 // MainActivityへ遷移します
                 context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             } else {
