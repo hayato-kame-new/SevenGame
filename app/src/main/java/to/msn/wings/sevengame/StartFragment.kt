@@ -17,7 +17,11 @@ import to.msn.wings.sevengame.rv.CardListAdapter
 import to.msn.wings.sevengame.rv.ListItem
 import android.widget.Button
 import androidx.core.content.ContextCompat
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
 import kotlin.properties.Delegates
+import kotlin.random.Random
 
 /**
  * MainActivity上のフラグメントです
@@ -58,7 +62,6 @@ class StartFragment : Fragment() {
         val extras = intent?.extras
 
         _game = Game()
-
 
         if (extras == null) {
             /* 初回
@@ -103,6 +106,35 @@ class StartFragment : Fragment() {
 
             // ここから、comAの動作 comBの動作を書きます。メソッド化して ２回呼ぶように書きます この先プレイヤーが増えても対応できるようにする
 // プレイヤー分のパスカウントの変数が必要
+            // まず、選ぶ、選べなかったらパスをする
+            // _cardSetの中に持ち手のがあるかどうか メソッド化する _comAList から 新しいリストを作る
+                // まずAから
+            val subSet = getSubSet(_cardSet, _comAList)
+            var str = ""
+            var randomIndex = 0
+            var counter = 0
+            if (subSet.size != 0) {  // 出す
+                randomIndex = Random.nextInt(subSet.size)  //2だったとすると
+                for (item in subSet) {
+                    if ( randomIndex == counter) {
+                        str = item
+                        break
+                    }
+                    counter++
+                }
+                // この strが出すやつ
+             //   _cardSet　から この strを除いて 次のを加える作業をしてください
+                // comAりすとから 同じタグのを除いてください
+
+                // comBも同じことをしてください
+
+
+
+
+            } else {   // 要素がない
+                // パスする
+            }
+
 
 
 
@@ -200,7 +232,7 @@ class StartFragment : Fragment() {
     }
 
     /**
-     * 新しくオブジェクトを作り直して ディープコピーをする MutableListじゃないとだめ
+     * プレイヤーのカードを人数分で分ける.新しくオブジェクトを作り直して ディープコピーをする MutableListじゃないとだめ
      */
         fun <T> getSubList(list: List<T>, start: Int, end: Int): List<T>? {
         val subList: MutableList<T> = ArrayList()  // MutableList
@@ -211,5 +243,17 @@ class StartFragment : Fragment() {
         }
 
 
+    fun <T> getSubSet(set: Set<T>, list: List<PlayerListItem>): HashSet<String> {
+        val subSet: HashSet<String> = HashSet()  // HashSet
+        for (s in set) {
+            for (item in list) {
+                if (s!!.equals(item.pTag)) {
+                    subSet.add(s.toString())
+                }
+            }
+           //  return subSet
+        }
+        return subSet
 
+    }
 }
