@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">SevenGame</string>
     uncontained
-    <string name="putOn">%1$s カードを置きました</string>
+    <string name="putOn">あなたは %1$s カードを置きました</string>
+    <string name="comAPutOn">コンピュターAは %1$s カードを置きました</string>
     <string name="uncontained">そのカードは置けません</string>
 
 </resources>
