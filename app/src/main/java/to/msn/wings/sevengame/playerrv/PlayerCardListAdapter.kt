@@ -196,7 +196,7 @@ class PlayerCardListAdapter(
                     }
                 }
                 // トースト表示
-                val toast: Toast = Toast.makeText(context, context.getString(R.string.putOn, txtViewPTag.text.toString()), Toast.LENGTH_SHORT)
+                val toast: Toast = Toast.makeText(context, context.getString(R.string.put_on, txtViewPTag.text.toString()), Toast.LENGTH_SHORT)
                 toast.show()
 
                 // 手持ちのカードが muSetに、存在したら、存在したものをリストで取得し、リストが要素がない空ならば、出せるカードがないのでパスをする

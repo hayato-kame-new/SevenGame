@@ -112,6 +112,10 @@ class StartFragment : Fragment() {
             var putStr = ""
             var randomIndex = 0
             var counter = 0
+            /////////////////// ここで
+            val _deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
+            val _deepCardSet = HashSet<String>(cardSet)  // ディープコピーすること (同じ参照にしないこと)
+            ////////　ここからcomA
             if (subSet.size != 0) {  // Aは　出せるので出す
                 randomIndex = Random.nextInt(subSet.size)  //2だったとすると
                 for (item in subSet) {
@@ -122,7 +126,7 @@ class StartFragment : Fragment() {
                     counter++
                 }
                 // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！ ディープコピーにしないとエラー _cardSet = cardSet としてはいけない バインドが終わるまで cardSetも変わってしまってはいけないからです
-              val _deepCardSet = HashSet<String>(cardSet)  // ディープコピーすること (同じ参照にしないこと)
+          //    val _deepCardSet = HashSet<String>(cardSet)  // ディープコピーすること (同じ参照にしないこと)
 
                 val mark = putStr.substring(0, 1)  // "D" とか
                 val numInt = putStr.substring(1).toInt()  // 5　とか
@@ -177,11 +181,11 @@ class StartFragment : Fragment() {
                     }
                 }
                 // ここで lateinit varフィールドに 初期値を代入する
-                _cardSet = HashSet<String>(_deepCardSet)  // ディープコピーすること (同じ参照にしないこと)
+               // _cardSet = HashSet<String>(_deepCardSet)  // ディープコピーすること (同じ参照にしないこと)
                 // _deepCardSetここまで
 
 
-                val _deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
+             //   val _deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
 
                 // comA手持ちりすとから putStr と　同じタグのを除いてください
                 // java.util.ConcurrentModificationException を回避するために forは使わないでください
@@ -193,7 +197,7 @@ class StartFragment : Fragment() {
                     }
                 }
                 // ここで lateinit varフィールドに 初期値を代入する
-                _comAList = ArrayList<PlayerListItem>(_deepComAList) // ディープコピーすること 同じ参照にしないこと
+              //  _comAList = ArrayList<PlayerListItem>(_deepComAList) // ディープコピーすること 同じ参照にしないこと
 
 
                 // 卓上リストを　　trueにして表示されるようにしてください
@@ -204,37 +208,67 @@ class StartFragment : Fragment() {
                     }
                 }
                 // トースト表示
-                val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comAPutOn, putStr), Toast.LENGTH_SHORT)
+                val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_putOn, putStr), Toast.LENGTH_SHORT)
                 toast.show()
 
-            } else {   // Aは 出せるもの要素がない
+            } else {   // Aは 出せるもの要素がない パスをします！！
                 // パスする パスカウンターを操作 もし、パスが限度を越したら負け、持ち札を全ておく、また _cardSetを操作する トースト表示
                 // パスができるなら、パスカウンターだけ操作
+                val intent = Intent(activity, MainActivity::class.java)
+                if (_comAPassCounter == 0 && _comBPassCounter == 0) { // 終了
+                    // あなたの勝ちですダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
+                    AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
+                        .setTitle("あなたの勝ちです")
+                        .setMessage("ゲーム再開する")
+                        .setPositiveButton("OK", { dialog, which ->
+                            activity?.startActivity(intent)  // ここで遷移する
+                        })
+                        .show()
+                    // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
 
-                // Aは出せるものがなかった時の処理を書いてください！！
+                } else if (_comAPassCounter == 0 && _comBPassCounter != 0) {
+                    // comAの負けです トースト出す  comA手持ちを全て出す  comBとあなたでゲームは続く
+                    val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_lose), Toast.LENGTH_SHORT)
+                    toast.show()
+                    // comA負けたので手持ちを全て出す _deepComAListを変更空にする　_deepCardSetも変更すること 卓上にも並べること
+                    val sub = arrayListOf(_deepComAList)  // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
+                    // _deepComAListを変更空にする リスト内の全要素を削除
+                    _deepComAList.clear()
+                    // 卓上に並べる
+
+                    // _deepCardSetも変更する
 
 
-
+                } else {
+                    // まだゲームは続けられる　 3人とも続いてる
+                    _comAPassCounter--
+                    _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"
+                    _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
+                    if (_comAPassCounter == 0) {
+                        _aTxt.text = "コンピューターA パス 残りなし"
+                        _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
+                    }
+                    // comAはパスしたから パスカウンターだけをマイナスするだけ
+                }
             }
-            // comA終わり　comB　また繰り返す
-
-            // Bが出せるのか調べます
-
+            ////////　ここまでcomA
+            ////////　ここからcomB
 
 
+
+
+            ////////　ここまでcomB
+            // ここで lateinit varフィールドに 初期値を代入する
+            _cardSet = HashSet<String>(_deepCardSet)  // ディープコピーすること (同じ参照にしないこと)
+            // ここで lateinit varフィールドに 初期値を代入する
+              _comAList = ArrayList<PlayerListItem>(_deepComAList) // ディープコピーすること 同じ参照にしないこと
+            // ここで lateinit varフィールドに 初期値を代入する
+            // _comBList = ArrayList<PlayerListItem>(_deepComBList) // ディープコピーすること 同じ参照にしないこと
 
             /* 遷移してきたときここまで
             */
         }
 
-
-
-        // パスボタンを押すと、intentを発行して、_cardSet _tableCardData _playerList _comAList _comBList のデータを送って、このMain Activityへ戻るようにします。
-        // すると　intentにExtraがついてるので elseのブロックへ行きます、つまり、プレイヤーはスキップして、 comA comBの実行になります
-        // パスのカウントするフィールが必要になってきます パスをカウントします ３人分別々の変数が必要
-     //    var playerPassCounter = 3
-//        _passBtn = view.findViewById<Button>(R.id.passBtn)!!
-//        _passBtn.text = "パス 残り " + _playerPassCounter.toString() + "回"
 
         view.findViewById<Button>(R.id.passBtn).also {
             _passBtn = it!!
