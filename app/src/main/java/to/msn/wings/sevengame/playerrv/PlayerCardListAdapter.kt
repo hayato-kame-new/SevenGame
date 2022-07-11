@@ -109,11 +109,31 @@ class PlayerCardListAdapter(
 
             val context = holder.itemView.context // MainActivity が取得できてる
 
+            // プレイヤーの持ち手リストから、出したカードを取り除く
+            // java.util.ConcurrentModificationException を回避するために forは使わないでください
+            val iterator = _deepDataList.iterator()  // 元のコレクションを書き換えます エラーなしで
+            while (iterator.hasNext()){
+                val item = iterator.next()
+                if (item.pTag.equals(txtViewPTag.text)) {
+                    iterator.remove()
+                }
+            }
+
+            // 順番として _deepCardSetよりも、まず先に 卓上の_tableCardDataのアイテムListItemの属性を変更すること
+            // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
+            for (item in _tableCardData) {
+                if (item.tag.equals(txtViewPTag.text)) {
+                    item.placed = true
+                }
+            }
+
+            // ここから 作り直しをしてください!!!
+            // ここから 作り直しをしてください!!!
+
+            // 最後に、置ける候補のカードを要素としている　_deepCardSet　への変更をする
             if (_deepCardSet.contains(txtViewPTag.text.toString()) == true) {
                 val intent = Intent(context, MainActivity::class.java)  // MainActivityから MainActivityへデータを送り 戻る
 
-                //  含まれるタグが 8以上 12以下の時には +1の数のカード　   13の時は 1のカード を加える
-                // 含まれるタグが 2以上 6以下の時には -1の数のカード  1の時は 13のカード を加えます
                 val mark = (txtViewPTag.text.toString()).substring(0, 1)  // "S" とか
                 val numInt = (txtViewPTag.text.toString()).substring(1).toInt()  // 1　とか
                 val rangeMore: IntRange = 8..12
@@ -130,13 +150,6 @@ class PlayerCardListAdapter(
                 }
                 val addStr = mark + strNum
 
-                // addStr が "S1"  だったら、置けるリストの中に 同じマークで 8以上 13以下のタグがあれば除いてください
-                // そして "S1"を 置けるリストに add してください Setでは指定された要素がセット内になかった場合に追加してくれます 重複はしない
-                //  addStr が "S13" だったら、置けるリストの中に、もし スペードで １以上 ６以下のタグがあれば除いてください
-                // そして "S13"を 置けるリストに add してください
-
-          //      var muSet : MutableSet<String>  = _cardSet as MutableSet<String>
-
 
                 _deepCardSet.add(addStr)  // 追加する
                 // java.util.ConcurrentModificationException を回避するために forは使わないでください
@@ -147,9 +160,6 @@ class PlayerCardListAdapter(
                         ite.remove()
                     }
                 }
-             // ここまでの動きはOKです
-                // 1 か 13　が出てきた時にチェックしてください！！
-
                 if (strNum == "1") {  // まだ動き未確認です
                     while (ite.hasNext()){
                         val item = ite.next()
@@ -175,18 +185,6 @@ class PlayerCardListAdapter(
                     }
                 }
 
-
-                // 卓上カードのアイテムListItemの属性を変更する placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
-                for (item in _tableCardData) {
-                    if (item.tag.equals(txtViewPTag.text)) {
-                        item.placed = true
-                    }
-                }
-
-
-            //    val pArrayLi : MutableList<PlayerListItem> = _deepDataList as MutableList<PlayerListItem> // ダウンキャストなので 明示的キャスト
-
-
                 // java.util.ConcurrentModificationException を回避するために forは使わないでください
                 val iterator = _deepDataList.iterator()  // 元のコレクションを書き換えます エラーなしで
                 while (iterator.hasNext()){
@@ -198,27 +196,13 @@ class PlayerCardListAdapter(
                 // トースト表示
                 val toast: Toast = Toast.makeText(context, context.getString(R.string.put_on, txtViewPTag.text.toString()), Toast.LENGTH_SHORT)
                 toast.show()
-
-                // 手持ちのカードが muSetに、存在したら、存在したものをリストで取得し、リストが要素がない空ならば、出せるカードがないのでパスをする
-                // パスは ３回でき、4回目で 負け、負けになれば、手持ちカードを全て出し、ゲームを抜けること
-                // パスをしたら、パスをしましたとトースト表示する パス(残り○回)とトーストに書く パス４回目で 負けましたと表示してあなたが負けたのでここで終了
-
-                // もし、負けたら  ゲームはあなたの負けです でここで ダイアログを表示させて、 ダイアログ上 またゲームをするボタンだけ
-                // を作っておく、またゲームをするボタンを押したら、intentに何もputせずに MainActivityへ遷移すると、初回になる
-
-
-
-
+                // 注意点 putExtraは リストの時には ArrayList型でないとだめ
                 // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
                 intent.putExtra("data", _deepDataList as ArrayList<PlayerListItem> )
                 //  Stringは Serializableインタフェースを実装してるので putExtraに渡せる
                 intent.putExtra("cardSet", _deepCardSet as HashSet<String>)
-                // 注意点 putExtraは ArrayList型でないとだめ
                 // 注意点 ListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要があります
                 intent.putExtra("tableCardData", _tableCardData as ArrayList<ListItem>)
-
-
-
                 intent.putExtra("comAList", _deepComAList as ArrayList<PlayerListItem>)
                 intent.putExtra("comBList", _deepComBList as ArrayList<PlayerListItem>)
                 intent.putExtra("pPassCount", _playerPassCounter)  // そのまま渡すだけ
@@ -227,7 +211,7 @@ class PlayerCardListAdapter(
                 // MainActivityへ遷移します
                 context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             } else {
-                // 置けないカードだったら、トースト表示だけ
+                // 置けないカードだったら、トースト表示だけ 遷移しません パスをしたいなら、ボタンを押せるようにしてるから
                 val toast: Toast = Toast.makeText(context, context.getString(R.string.uncontained), Toast.LENGTH_SHORT)
                 toast.show()
             }
@@ -237,7 +221,5 @@ class PlayerCardListAdapter(
     override fun getItemCount(): Int {
         return data.size
     }
-
-
 
 }

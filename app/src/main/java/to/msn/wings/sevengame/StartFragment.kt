@@ -31,7 +31,7 @@ import kotlin.random.Random
  * intent.putExtra する際に 第二引数が ArrayList<E> である必要があるために、なるべく ArrayList<E>を使うようにします (MutableListではなく)
  */
 class StartFragment : Fragment() {
-     // publicにしておく _cardSet は 重複しないSetにする
+     // publicにしておく _cardSet は 重複しないSetにする 次に置ける候補のカードを要素としている
     lateinit var _cardSet : HashSet<String>
     // 変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
     private lateinit var _game : Game
@@ -62,6 +62,23 @@ class StartFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_start, container, false)
 
+        _aTxt = view.findViewById<TextView>(R.id.aTxt)
+        _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
+
+        _bTxt = view.findViewById<TextView>(R.id.bTxt)
+        _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comBColor)!!)
+
+//        view.findViewById<TextView>(R.id.bTxt).also {
+//            _bTxt = it!!
+//            //_bTxt.text = "コンピューターBは パス 残り " + _comBPassCounter.toString() + "回"  // 最初 3
+//            _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comBColor)!!)
+////            if (_comBPassCounter == 0) {
+////                _bTxt.text = "コンピューターB パス 残りなし"
+////                _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
+////            }
+//        }
+
+
         val intent = activity?.intent
         val extras = intent?.extras
 
@@ -77,6 +94,8 @@ class StartFragment : Fragment() {
             _playerPassCounter = 3  // by Delegates.notNull<Int>()フィールドに 初期値を代入
             _comAPassCounter = 3  // by Delegates.notNull<Int>()フィールドに 初期値を代入
             _comBPassCounter = 3  // by Delegates.notNull<Int>()フィールドに 初期値を代入
+            _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"  // 最初 3
+            _bTxt.text = "コンピューターBは パス 残り " + _comBPassCounter.toString() + "回"  // 最初 3
             // lateinit varフィールドに 初期値を代入してる
             //      単純な解決策は、指定された範囲の間に存在する元のリストの要素をサブリストに追加することです。
             // getSubListメソッドの中で MutableListオブジェクトを新しく作って返している MutableListにしないとできない
@@ -104,6 +123,17 @@ class StartFragment : Fragment() {
             _playerPassCounter = intent.getIntExtra("pPassCount", 0)
             _comAPassCounter = intent.getIntExtra("comAPassCount", 0)
             _comBPassCounter = intent.getIntExtra("comBPassCount", 0)
+
+            _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"  // 最初 3
+            _bTxt.text = "コンピューターBは パス 残り " + _comBPassCounter.toString() + "回"  // 最初 3
+            if (_comAPassCounter == 0) {
+                _aTxt.text = "コンピューターA パス 残りなし"
+                _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
+            }
+            if (_comBPassCounter == 0) {
+                _bTxt.text = "コンピューターB パス 残りなし"
+                _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
+            }
 
             // アダプターと同じ処理を繰り返し書くので、同じメソッドを使いまわせるように Gameクラスにメソッドを定義して使うようにします。Javaでいうstaticなメソッドを作る
             // クラス名.メソッド名で呼び出しできるようにします kotlinではstaticメソッドはありません。ただしCompanion Objectsという仕組みを使えば実現できます
@@ -312,26 +342,6 @@ class StartFragment : Fragment() {
                 intent.putExtra("comAPassCount", _comAPassCounter)
                 intent.putExtra("comBPassCount", _comBPassCounter)
                 activity?.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
-            }
-        }
-
-        view.findViewById<TextView>(R.id.aTxt).also {
-            _aTxt = it!!
-            _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"  // 最初 3
-            _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
-            if (_comAPassCounter == 0) {
-                _aTxt.text = "コンピューターA パス 残りなし"
-                _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
-            }
-        }
-
-        view.findViewById<TextView>(R.id.bTxt).also {
-            _bTxt = it!!
-            _bTxt.text = "コンピューターBは パス 残り " + _comBPassCounter.toString() + "回"  // 最初 3
-            _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comBColor)!!)
-            if (_comBPassCounter == 0) {
-                _bTxt.text = "コンピューターB パス 残りなし"
-                _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
             }
         }
 
