@@ -115,8 +115,9 @@ class PlayerCardListAdapter(
             //   Log.i("ok", txtViewPTag.text.toString() + "です" + it.toString() + "です クラスは" + it.javaClass)
 
 
-            val context = holder.itemView.context // MainActivity が取得できてる
+           val context = holder.itemView.context // MainActivity が取得できてる
          //   val intent = Intent(context, MainActivity::class.java)
+
 
 
             val txtP = it.findViewById<TextView>(R.id.pTag)
@@ -163,8 +164,6 @@ class PlayerCardListAdapter(
                         itemDistance = item.distance  // 6だったら -1 になる
                     }
                 }
-                // ここまでOKです
-                // ここまで 大丈夫かなと思う
 
                 // さらに、次に出せるカードの属性を変更する
                 val game = Game()
@@ -202,10 +201,10 @@ class PlayerCardListAdapter(
                         }
 
                     }
-                }else if (numInt in rangeLess) {  // 1..6
-                   var n = itemDistance // 6 なら itemDistance -1
-                    for ( n in distanceMIN downTo itemDistance) { //  -6　~　-1 の間を -1から順に調べたい時 downTo と使うと -1 から始まり逆順に -2 -3 -4 -5 -6 となる
-
+                } else if (numInt in rangeLess) {  // 1..6
+                  // 6 なら itemDistance -1
+                //    for ( n in distanceMIN downTo itemDistance) { //  -6　~　-1 の間を -1から順に調べたい時 downTo と使うと -1 から始まり逆順に -2 -3 -4 -5 -6 となる
+                    for ( n in -1 downTo -6) {
                         // n が -1 ならば -1 -2 -3 -4 -5 -6 までループさせる
                         var card = game.getNPossibleCard(_deepPossibleCardSet, txtP.text.toString(), n)
                         if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
@@ -236,7 +235,7 @@ class PlayerCardListAdapter(
                   // 注意点 putExtraは リストの時には ArrayList型でないとだめ
                // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
                 intent.putExtra("data", _deepDataList as ArrayList<PlayerListItem> )
-                //  Stringは Serializableインタフェースを実装してるので putExtraに渡せる
+                //  自作したクラス PossibleCardを intentで送るためには Serializableインタフェースを実装します
                 intent.putExtra("deepPossibleCardSet", _deepPossibleCardSet as HashSet<PossibleCard>)
                 // 注意点 ListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要があります
                 intent.putExtra("tableCardData", _tableCardData as ArrayList<ListItem>)
@@ -255,6 +254,7 @@ class PlayerCardListAdapter(
                 toast.show()
             }
         }
+        // リスナーここまで
     }
 
     override fun getItemCount(): Int {
