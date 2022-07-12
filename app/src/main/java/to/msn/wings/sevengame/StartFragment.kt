@@ -32,9 +32,10 @@ import kotlin.random.Random
  */
 class StartFragment : Fragment() {
      // publicにしておく _cardSet は 重複しないSetにする 次に置ける候補のカードを要素としている
-    lateinit var _cardSet : HashSet<String>
+   // lateinit var _cardSet: HashSet<String>
+     lateinit var _possibleCardSet: HashSet<PossibleCard>
     // 変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
-    private lateinit var _game : Game
+    private lateinit var _game: Game
     // public
     lateinit var _tableCardData : ArrayList<ListItem>
     private lateinit var _playersCardData : ArrayList<PlayerListItem>
@@ -61,23 +62,12 @@ class StartFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_start, container, false)
-
+        // コンピュータA の表示
         _aTxt = view.findViewById<TextView>(R.id.aTxt)
         _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
-
+        // コンピュータB の表示
         _bTxt = view.findViewById<TextView>(R.id.bTxt)
         _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comBColor)!!)
-
-//        view.findViewById<TextView>(R.id.bTxt).also {
-//            _bTxt = it!!
-//            //_bTxt.text = "コンピューターBは パス 残り " + _comBPassCounter.toString() + "回"  // 最初 3
-//            _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comBColor)!!)
-////            if (_comBPassCounter == 0) {
-////                _bTxt.text = "コンピューターB パス 残りなし"
-////                _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
-////            }
-//        }
-
 
         val intent = activity?.intent
         val extras = intent?.extras
@@ -88,7 +78,8 @@ class StartFragment : Fragment() {
             /* 初回
             */
             // lateinit varフィールドに 初期値を代入
-            _cardSet = hashSetOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")  // lateinit varフィールドに 初期値を代入
+         //   _cardSet = hashSetOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")  // lateinit varフィールドに 初期値を代入
+            _possibleCardSet = _game.getPossibleCardData() // lateinit varフィールドに 初期値を代入
             _tableCardData = _game.getStartTableCardData() // lateinit varフィールドに 初期値を代入
             _playersCardData = _game.getPlayersCardData() // lateinit varフィールドに 初期値を代入
             _playerPassCounter = 3  // by Delegates.notNull<Int>()フィールドに 初期値を代入
@@ -112,7 +103,7 @@ class StartFragment : Fragment() {
             /* 遷移してきたとき
             */
             // lateinit varフィールドに 初期値を代入する  直接入れないで一旦違う変数に入れておいた方がいいかも??
-                val cardSet = intent.getSerializableExtra("cardSet") as HashSet<String>
+                val deepPossibleCardSet = intent.getSerializableExtra("deepPossibleCardSet") as HashSet<PossibleCard>
                 val comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
                _playerList = intent.getSerializableExtra("data") as ArrayList<PlayerListItem>
          //   _cardSet =  intent.getSerializableExtra("cardSet") as HashSet<String>
@@ -138,149 +129,154 @@ class StartFragment : Fragment() {
             // アダプターと同じ処理を繰り返し書くので、同じメソッドを使いまわせるように Gameクラスにメソッドを定義して使うようにします。Javaでいうstaticなメソッドを作る
             // クラス名.メソッド名で呼び出しできるようにします kotlinではstaticメソッドはありません。ただしCompanion Objectsという仕組みを使えば実現できます
                 // まずAから
-            val subSet = getSubSet(cardSet, comAList)
+            val subSet = getSubSet(deepPossibleCardSet, comAList)
             var putStr = ""
             var randomIndex = 0
             var counter = 0
             /////////////////// ここで
+
+            // ここから見直し _deepPossibleCardSet
             val _deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
-            val _deepCardSet = HashSet<String>(cardSet)  // ディープコピーすること (同じ参照にしないこと)
+            val _deepPossibleCardSet = HashSet<PossibleCard>(deepPossibleCardSet)  // ディープコピーすること (同じ参照にしないこと)
             ////////　ここからcomA
-            if (subSet.size != 0) {  // Aは　出せるので出す
-                randomIndex = Random.nextInt(subSet.size)  //2だったとすると
-                for (item in subSet) {
-                    if ( randomIndex == counter) {
-                        putStr = item
-                        break
-                    }
-                    counter++
-                }
-                // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！ ディープコピーにしないとエラー _cardSet = cardSet としてはいけない バインドが終わるまで cardSetも変わってしまってはいけないからです
-          //    val _deepCardSet = HashSet<String>(cardSet)  // ディープコピーすること (同じ参照にしないこと)
-
-                val mark = putStr.substring(0, 1)  // "D" とか
-                val numInt = putStr.substring(1).toInt()  // 5　とか
-                val rangeMore: IntRange = 8..12
-                val rangeLess: IntRange = 2..6
-                var strNum = ""
-                if (numInt in rangeMore) {
-                    strNum = (numInt + 1).toString()  // String型の "9" "10 "11" "12" "13"
-                } else if (numInt in rangeLess) {
-                    strNum = (numInt - 1).toString()  // String型の "5" "4" "3" "2" "1"
-                } else if (numInt == 13) {  // 13を出したら、1しか置けなくなるから
-                    strNum = "1"
-                } else if (numInt == 1) {  // 1を出したら 13しか置けなくなるから
-                    strNum = "13"
-                }
-                val addStr = mark + strNum
-                _deepCardSet.add(addStr)  // 追加する
-
-                // java.util.ConcurrentModificationException を回避するために forは使わないでください
-                val ite = _deepCardSet.iterator()  // _deepCardSet を書き換えます イテレータを使えばエラーなしでできる
-                while (ite.hasNext()){
-                    val item = ite.next()
-                    if (item.equals(putStr)) {
-                        ite.remove()
-                    }
-                }
-                // ここまでの動きはOKです
-                // 1 か 13　が出てきた時にチェックしてください！！
-
-                if (strNum == "1") {  // まだ動き未確認です
-                    while (ite.hasNext()){
-                        val item = ite.next()
-                        var m = item.substring(0 ,1)
-                        var i = item.substring(1)
-                        if (m.equals(mark)) {
-                            if (i.toInt() >= 8 && i.toInt() <= 13) {
-                                ite.remove()
-                            }
-                        }
-                    }
-                }
-                if (strNum == "13") {  // まだ動き未確認です
-                    while (ite.hasNext()){
-                        val item = ite.next()
-                        var m = item.substring(0, 1)
-                        var i = item.substring(1)
-                        if (m.equals(mark)) {
-                            if (i.toInt() >= 1 && i.toInt() <= 6) {
-                                ite.remove()
-                            }
-                        }
-                    }
-                }
-                // ここで lateinit varフィールドに 初期値を代入する
-               // _cardSet = HashSet<String>(_deepCardSet)  // ディープコピーすること (同じ参照にしないこと)
-                // _deepCardSetここまで
 
 
-             //   val _deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
+//
+//            if (subSet.size != 0) {  // Aは　出せるので出す
+//                randomIndex = Random.nextInt(subSet.size)  //2だったとすると
+//                for (item in subSet) {
+//                    if ( randomIndex == counter) {
+//                        putStr = item
+//                        break
+//                    }
+//                    counter++
+//                }
+//                // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！ ディープコピーにしないとエラー _cardSet = cardSet としてはいけない バインドが終わるまで cardSetも変わってしまってはいけないからです
+//          //    val _deepCardSet = HashSet<String>(cardSet)  // ディープコピーすること (同じ参照にしないこと)
+//
+//                val mark = putStr.substring(0, 1)  // "D" とか
+//                val numInt = putStr.substring(1).toInt()  // 5　とか
+//                val rangeMore: IntRange = 8..12
+//                val rangeLess: IntRange = 2..6
+//                var strNum = ""
+//                if (numInt in rangeMore) {
+//                    strNum = (numInt + 1).toString()  // String型の "9" "10 "11" "12" "13"
+//                } else if (numInt in rangeLess) {
+//                    strNum = (numInt - 1).toString()  // String型の "5" "4" "3" "2" "1"
+//                } else if (numInt == 13) {  // 13を出したら、1しか置けなくなるから
+//                    strNum = "1"
+//                } else if (numInt == 1) {  // 1を出したら 13しか置けなくなるから
+//                    strNum = "13"
+//                }
+//                val addStr = mark + strNum
+//                _deepPossibleCardSet.add(addStr)  // 追加する
+//
+//                // java.util.ConcurrentModificationException を回避するために forは使わないでください
+//                val ite = _deepPossibleCardSet.iterator()  // _deepCardSet を書き換えます イテレータを使えばエラーなしでできる
+//                while (ite.hasNext()){
+//                    val item = ite.next()
+//                    if (item.equals(putStr)) {
+//                        ite.remove()
+//                    }
+//                }
+//                // ここまでの動きはOKです
+//                // 1 か 13　が出てきた時にチェックしてください！！
+//
+//                if (strNum == "1") {  // まだ動き未確認です
+//                    while (ite.hasNext()){
+//                        val item = ite.next()
+//                        var m = item.substring(0 ,1)
+//                        var i = item.substring(1)
+//                        if (m.equals(mark)) {
+//                            if (i.toInt() >= 8 && i.toInt() <= 13) {
+//                                ite.remove()
+//                            }
+//                        }
+//                    }
+//                }
+//                if (strNum == "13") {  // まだ動き未確認です
+//                    while (ite.hasNext()){
+//                        val item = ite.next()
+//                        var m = item.substring(0, 1)
+//                        var i = item.substring(1)
+//                        if (m.equals(mark)) {
+//                            if (i.toInt() >= 1 && i.toInt() <= 6) {
+//                                ite.remove()
+//                            }
+//                        }
+//                    }
+//                }
+//                // ここで lateinit varフィールドに 初期値を代入する
+//               // _cardSet = HashSet<String>(_deepCardSet)  // ディープコピーすること (同じ参照にしないこと)
+//                // _deepCardSetここまで
+//
+//
+//             //   val _deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
+//
+//                // comA手持ちりすとから putStr と　同じタグのを除いてください
+//                // java.util.ConcurrentModificationException を回避するために forは使わないでください
+//                val iterator = _deepComAList.iterator()  // 元のコレクションを書き換えます エラーなしで
+//                while (iterator.hasNext()){
+//                    val item = iterator.next()
+//                    if (item.pTag.equals(putStr)) {
+//                        iterator.remove()
+//                    }
+//                }
+//                // ここで lateinit varフィールドに 初期値を代入する
+//              //  _comAList = ArrayList<PlayerListItem>(_deepComAList) // ディープコピーすること 同じ参照にしないこと
+//
+//
+//                // 卓上リストを　　trueにして表示されるようにしてください
+//                // 卓上カードのアイテムListItemの属性を変更する placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
+//                for (item in _tableCardData) {  // 要素の属性を操作してるだけだから、元のコレクションがそのまま使える
+//                    if (item.tag.equals(putStr)) {
+//                        item.placed = true
+//                    }
+//                }
+//                // トースト表示
+//                val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_putOn, putStr), Toast.LENGTH_SHORT)
+//                toast.show()
 
-                // comA手持ちりすとから putStr と　同じタグのを除いてください
-                // java.util.ConcurrentModificationException を回避するために forは使わないでください
-                val iterator = _deepComAList.iterator()  // 元のコレクションを書き換えます エラーなしで
-                while (iterator.hasNext()){
-                    val item = iterator.next()
-                    if (item.pTag.equals(putStr)) {
-                        iterator.remove()
-                    }
-                }
-                // ここで lateinit varフィールドに 初期値を代入する
-              //  _comAList = ArrayList<PlayerListItem>(_deepComAList) // ディープコピーすること 同じ参照にしないこと
-
-
-                // 卓上リストを　　trueにして表示されるようにしてください
-                // 卓上カードのアイテムListItemの属性を変更する placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
-                for (item in _tableCardData) {  // 要素の属性を操作してるだけだから、元のコレクションがそのまま使える
-                    if (item.tag.equals(putStr)) {
-                        item.placed = true
-                    }
-                }
-                // トースト表示
-                val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_putOn, putStr), Toast.LENGTH_SHORT)
-                toast.show()
-
-            } else {   // Aは 出せるもの要素がない パスをします！！
+//            } else {   // Aは 出せるもの要素がない パスをします！！
                 // パスする パスカウンターを操作 もし、パスが限度を越したら負け、持ち札を全ておく、また _cardSetを操作する トースト表示
                 // パスができるなら、パスカウンターだけ操作
-                val intent = Intent(activity, MainActivity::class.java)
-                if (_comAPassCounter == 0 && _comBPassCounter == 0) { // 終了
-                    // あなたの勝ちですダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
-                    AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
-                        .setTitle("あなたの勝ちです")
-                        .setMessage("ゲーム再開する")
-                        .setPositiveButton("OK", { dialog, which ->
-                            activity?.startActivity(intent)  // ここで遷移する
-                        })
-                        .show()
-                    // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
-
-                } else if (_comAPassCounter == 0 && _comBPassCounter != 0) {
-                    // comAの負けです トースト出す  comA手持ちを全て出す  comBとあなたでゲームは続く
-                    val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_lose), Toast.LENGTH_SHORT)
-                    toast.show()
-                    // comA負けたので手持ちを全て出す _deepComAListを変更空にする　_deepCardSetも変更すること 卓上にも並べること
-                    val sub = arrayListOf(_deepComAList)  // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
-                    // _deepComAListを変更空にする リスト内の全要素を削除
-                    _deepComAList.clear()
-                    // 卓上に並べる
-
-                    // _deepCardSetも変更する
-
-
-                } else {
-                    // まだゲームは続けられる　 3人とも続いてる
-                    _comAPassCounter--
-                    _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"
-                    _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
-                    if (_comAPassCounter == 0) {
-                        _aTxt.text = "コンピューターA パス 残りなし"
-                        _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
-                    }
-                    // comAはパスしたから パスカウンターだけをマイナスするだけ
-                }
-            }
+//                val intent = Intent(activity, MainActivity::class.java)
+//                if (_comAPassCounter == 0 && _comBPassCounter == 0) { // 終了
+//                    // あなたの勝ちですダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
+//                    AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
+//                        .setTitle("あなたの勝ちです")
+//                        .setMessage("ゲーム再開する")
+//                        .setPositiveButton("OK", { dialog, which ->
+//                            activity?.startActivity(intent)  // ここで遷移する
+//                        })
+//                        .show()
+//                    // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
+//
+//                } else if (_comAPassCounter == 0 && _comBPassCounter != 0) {
+//                    // comAの負けです トースト出す  comA手持ちを全て出す  comBとあなたでゲームは続く
+//                    val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_lose), Toast.LENGTH_SHORT)
+//                    toast.show()
+//                    // comA負けたので手持ちを全て出す _deepComAListを変更空にする　_deepCardSetも変更すること 卓上にも並べること
+//                    val sub = arrayListOf(_deepComAList)  // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
+//                    // _deepComAListを変更空にする リスト内の全要素を削除
+//                    _deepComAList.clear()
+//                    // 卓上に並べる
+//
+//                    // _deepCardSetも変更する
+//
+//
+//                } else {
+//                    // まだゲームは続けられる　 3人とも続いてる
+//                    _comAPassCounter--
+//                    _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"
+//                    _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
+//                    if (_comAPassCounter == 0) {
+//                        _aTxt.text = "コンピューターA パス 残りなし"
+//                        _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
+//                    }
+//                    // comAはパスしたから パスカウンターだけをマイナスするだけ
+//                }
+//            }
             ////////　ここまでcomA
             ////////　ここからcomB
 
@@ -289,7 +285,7 @@ class StartFragment : Fragment() {
 
             ////////　ここまでcomB
             // ここで lateinit varフィールドに 初期値を代入する
-            _cardSet = HashSet<String>(_deepCardSet)  // ディープコピーすること (同じ参照にしないこと)
+            _possibleCardSet = HashSet<PossibleCard>(_deepPossibleCardSet)  // ディープコピーすること (同じ参照にしないこと)
             // ここで lateinit varフィールドに 初期値を代入する
               _comAList = ArrayList<PlayerListItem>(_deepComAList) // ディープコピーすること 同じ参照にしないこと
             // ここで lateinit varフィールドに 初期値を代入する
@@ -333,7 +329,7 @@ class StartFragment : Fragment() {
                 }
                 // あなたがパスしたから 8つ intent.putExtraして、またMainActivity elseブロックへ戻ってきます
                 intent.putExtra( "data" ,_playerList)
-                intent.putExtra("cardSet", _cardSet)
+                intent.putExtra("possibleCardSet", _possibleCardSet)
 
                 intent.putExtra( "tableCardData" ,_tableCardData)
                  intent.putExtra( "comAList", _comAList)
@@ -360,11 +356,14 @@ class StartFragment : Fragment() {
                 layoutManager =
                     GridLayoutManager(activity, 16)  // ここはフラグメントなので thisじゃなくて activityプロパティ
                 // アダプターのクラスにデータを渡したいときには、このようにコンストラクタの実引数に渡すことで可能になります 第一引数は、RecycleViewで使うものです
-                adapter = PlayerCardListAdapter(_playerList, _cardSet, _tableCardData, _comAList , _comBList, _playerPassCounter ,_comAPassCounter, _comBPassCounter)  // 第2引数以降に渡しています
+                adapter = PlayerCardListAdapter(_playerList, _possibleCardSet, _tableCardData, _comAList , _comBList, _playerPassCounter ,_comAPassCounter, _comBPassCounter)  // 第2引数以降に渡しています
             }
         }
         return view  // フラグメントでは最後必ず viewを返す
     }
+
+
+
 
     /**
      * 管理ID順に並べる.インスタンスメソッド

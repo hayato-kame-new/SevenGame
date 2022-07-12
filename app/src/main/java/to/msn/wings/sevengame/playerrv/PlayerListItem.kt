@@ -2,8 +2,8 @@ package to.msn.wings.sevengame.playerrv
 
 import java.io.Serializable
 /**
- * データクラスです、もし、自作したクラスを  intentで送るためには Serializableインタフェースを実装しなくてはなりません.
- * 今回は Serializableを実装すべきです.
+ * データクラスです.自作したクラスを intentで送るためには Serializableインタフェースを実装しなくてはなりません.
+ * RecyclerViewのためのクラス.
  * import java.io.Serializable  をインポートします.
  */
 data class PlayerListItem(
