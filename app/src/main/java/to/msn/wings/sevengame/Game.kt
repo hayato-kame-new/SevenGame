@@ -191,13 +191,14 @@ class Game {
 
 
     /**
-     * n だけ先のオブジェクト取得.
+     * n だけ先のオブジェクト取得. n は負の数の時もある.
+     * 置いたカードの数が 8以上だとnは正の数　  6以下だと nは負の数
      */
-    fun getPossibleCard(set: Set<PossibleCard>, tag: String, n: Int): PossibleCard? {
+    fun getNPossibleCard(set: Set<PossibleCard>, tag: String, n: Int): PossibleCard? {
 
         var mark: String = tag.substring(0,1)  // "S"とか
-        var numInt: Int = tag.substring(1).toInt()  // 8 とか　今回は 8出したとすると
-        var newTagstr: String = mark + (numInt + n).toString()
+        var numInt: Int = tag.substring(1).toInt()  // 8以上だとnは正の数　  6以下だと nは負の数
+        var newTagstr: String = mark + (numInt + n).toString() // ８だと ９になり  6だと ５になる
         var possibleCard: PossibleCard? = null
         for (item in set) {
             if(item.tag.equals(newTagstr)) {
@@ -208,13 +209,13 @@ class Game {
     }
 
     /**
-     *
+     * 引数のタグと同じマークで、引数num が指定の数 となるカードを取得する
      */
-    fun getMinPossibleCard(set: Set<PossibleCard>, tag: String, i: Int): PossibleCard? {
+    fun getPossibleCard(set: Set<PossibleCard>, tag: String, num: Int): PossibleCard? {
 
         var mark: String = tag.substring(0,1)  // "S"とか
 
-        var newTagstr: String = mark + i.toString() // 1 から 6まで
+        var newTagstr: String = mark + num.toString()
 
         var possibleCard: PossibleCard? = null
         for (item in set) {
