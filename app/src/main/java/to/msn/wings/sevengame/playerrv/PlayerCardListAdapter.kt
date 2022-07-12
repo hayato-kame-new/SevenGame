@@ -26,7 +26,6 @@ import kotlin.collections.HashSet
  */
 class PlayerCardListAdapter(
     private val data: List<PlayerListItem>, // 第一引数はRecyclerViewにバインドするデータです
-   //  private val cardSet: Set<String>,  // 引数の型はインタフェース型でいい
     private val possibleCardSet: Set<PossibleCard>,   // 引数の型はインタフェース型でいい
     private val tableCardData: List<ListItem>,  // 引数の型はインタフェース型でいい ポリモーフィズム
     private val comAList : List<PlayerListItem>,
@@ -42,8 +41,7 @@ class PlayerCardListAdapter(
     // 遅延して コンストラクタの引数で渡ってきたものをフィールド値にセットします
     //  変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
     //  ここでは onCreate()の後に呼ばれる onCreateViewHolderの中で 代入をして初期化しています
-   //  private lateinit var _deepCardSet: HashSet<String>  // フィールド宣言だけ 　フィールドの型は実装の型にすること
-    private lateinit var _deepPossibleCardSet: HashSet<PossibleCard>
+    private lateinit var _deepPossibleCardSet: HashSet<PossibleCard>  // フィールド宣言だけ 　フィールドの型は実装の型にすること
     private lateinit var _tableCardData: ArrayList<ListItem>  // フィールド宣言だけ フィールドの型は実装の型にすること
     // コンストラクタの val data は　読み取り専用だから これも 違う変数名で新しく フィールドとして宣言します
     private lateinit var _deepDataList: ArrayList<PlayerListItem>  // フィールド宣言だけ　　onCreateViewHolderの中で 代入をして初期化しています フィールドの型は実装の型にすること
@@ -109,32 +107,87 @@ class PlayerCardListAdapter(
         cardView.setOnClickListener {
             val txtViewPTag = it.findViewById<TextView>(R.id.pTag)  // ラムダの中で、クリックしたビューのタグを取得する 変数名に気を付ける
             //   Log.i("ok", txtViewPTag.text.toString() + "です" + it.toString() + "です クラスは" + it.javaClass)
-
             val context = holder.itemView.context // MainActivity が取得できてる
 
-            // プレイヤーの持ち手リストから、出したカードを取り除く
-            // java.util.ConcurrentModificationException を回避するために forは使わないでください
-            val iterator = _deepDataList.iterator()  // 元のコレクションを書き換えます エラーなしで
-            while (iterator.hasNext()){
-                val item = iterator.next()
-                if (item.pTag.equals(txtViewPTag.text)) {
-                    iterator.remove()
+            // まず、属性を見て判断する
+            var decision: Boolean = false
+            for (item in _deepPossibleCardSet) {
+                if (item.tag.equals(txtViewPTag.text.toString())) {
+                    decision = item.possible
                 }
             }
-
-            // 順番として _deepCardSetよりも、まず先に 卓上の_tableCardDataのアイテムListItemの属性を変更すること
-            // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
-            for (item in _tableCardData) {
-                if (item.tag.equals(txtViewPTag.text)) {
-                    item.placed = true
+            // 判断した結果によって分岐する
+            if (decision == true) {
+                // クリックしたものはクリックしたものは置けるカードでしたので 処理をして、遷移する
+                val intent = Intent(context, MainActivity::class.java)  // MainActivityから MainActivityへデータを送り 戻る
+                // まずは プレイヤーの持ち手リスト_deepDataList から、出したカードを取り除く
+                // java.util.ConcurrentModificationException を回避するために forは使わないでください
+                val iterator = _deepDataList.iterator()  // 元のコレクションを書き換えます エラーなしで
+                while (iterator.hasNext()){
+                    val item = iterator.next()
+                    if (item.pTag.equals(txtViewPTag.text)) {
+                        iterator.remove()
+                    }
                 }
+                // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                for (item in _tableCardData) {
+                    if (item.tag.equals(txtViewPTag.text)) {
+                        item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
+                    }
+                }
+                // さらに、_deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                for (item in _deepPossibleCardSet) {
+                    if (item.tag.equals(txtViewPTag.text.toString())) {
+                        item.placed = true  // 置いた
+                        item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
+
+
+                    }
+                }
+                // さらに、次に出せるカードの属性を変更する
+
+                // 今回出すことのできたカード "S8" ~ "S13"ならから  なら、 8　で考えてみると次は "S9"のはずですが  8 を +1づつしていって、  13まで
+                // placedが false なら、それのpossibleをtrueに変えます。そこでループをbreak もし placedが true　なら また、+1して、placedを見る
+                // 13 まで見て 13も placedが trueならば、 1 のplacedをみる  1が
+                // １も trueなら また +1して、1から 6までみる trueなら何もせずにbreak
+
+                // 今回出すことのできたカード "S6" ~ "S1"なら 次は 6で考えてみると "S5" -1づつしていって   1 まで
+                // "S5"が placed trueなら、 -1    "S4" が placed falseなら _deepPossibleCardSetの "S4" の possible を　trueにする そこでbreak
+                // "S4"が placed trueなら -1  する "S2"が　　　　
+                // 1 まで見ても 1も placedが trueならば、 13 の placedをみる 13 が trueなら また -1 して 12 から 8 まで見て 8までいって
+                // 8もplacedが trueなら、何もせずにbreak
+
+
+
+                for (i in -6..6) {
+
+                }
+
+                // トースト表示
+                val toast: Toast = Toast.makeText(context, context.getString(R.string.put_on, txtViewPTag.text.toString()), Toast.LENGTH_SHORT)
+                toast.show()
+                  // 注意点 putExtraは リストの時には ArrayList型でないとだめ
+               // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
+                intent.putExtra("data", _deepDataList as ArrayList<PlayerListItem> )
+                //  Stringは Serializableインタフェースを実装してるので putExtraに渡せる
+                intent.putExtra("deepPossibleCardSet", _deepPossibleCardSet as HashSet<PossibleCard>)
+                // 注意点 ListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要があります
+                intent.putExtra("tableCardData", _tableCardData as ArrayList<ListItem>)
+                intent.putExtra("comAList", _deepComAList as ArrayList<PlayerListItem>)
+                intent.putExtra("comBList", _deepComBList as ArrayList<PlayerListItem>)
+                intent.putExtra("pPassCount", _playerPassCounter)  // そのまま渡すだけ
+                intent.putExtra("comAPassCount", _comAPassCounter)  // そのまま渡すだけ
+                intent.putExtra("comBPassCount", _comBPassCounter)  // そのまま渡すだけ
+                // MainActivityへ遷移します
+                context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
+            } else {
+                // クリックしたものは置けないカードだったので トースト表示だけ 遷移しません パスをしたいなら、ボタンを押せるようにしてるから
+                val toast: Toast = Toast.makeText(context, context.getString(R.string.uncontained), Toast.LENGTH_SHORT)
+                toast.show()
             }
 
-            // ここから 作り直しをしてください!!!
-            // ここから 作り直しをしてください!!!
 
-            // ここから　　
-            // 最後に、置ける候補のカードを要素としている　_deepCardSet　への変更をする
+
 
 //            if (_deepPossibleCardSet.contains(txtViewPTag.text.toString()) == true) {
 //                val intent = Intent(context, MainActivity::class.java)  // MainActivityから MainActivityへデータを送り 戻る

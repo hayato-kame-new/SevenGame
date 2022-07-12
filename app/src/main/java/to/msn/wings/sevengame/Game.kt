@@ -48,7 +48,7 @@ class Game {
                     listItem = ListItem(
                         ++count, // 管理IDは １からスタートして連番で振る Long値
                         _markList.get(i),
-                        _numberList.get(j),
+                        _numberList.get(j - 1),
                         _markList.get(i),
                         true,  // 置いてある
                         str
@@ -58,7 +58,7 @@ class Game {
                     listItem = ListItem(
                         ++count, // 管理IDは １からスタートして連番で振る
                         _markList.get(i),
-                        _numberList.get(j),
+                        _numberList.get(j - 1),
                         _markList.get(i),
                         false,// 卓上に置いていない
                         str
@@ -89,7 +89,7 @@ class Game {
                 if (j != 7) {  //  7のカードは作らない
                     playerListItem = PlayerListItem(
                         ++count, // 管理IDは １からスタートして連番で振る
-                        _numberList.get(j), // String型
+                        _numberList.get(j - 1), // String型
                         _markList.get(i),  // Int型
                         _tagList.get(i) + j
                     )
