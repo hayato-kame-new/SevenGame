@@ -5,6 +5,7 @@ import to.msn.wings.sevengame.playerrv.PlayerListItem
 import to.msn.wings.sevengame.rv.ListItem
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.LinkedHashMap
 
 /**
  * 今回はJOKERなしでゲームを作っていく.
@@ -15,16 +16,30 @@ import kotlin.collections.ArrayList
 class Game {
 //  intent.putExtra する際に 第二引数が ArrayList<E> である必要があるために、なるべく ArrayList<E>を使うようにします (MutableListではなく)
 
-    // val _numberList : List<String> = arrayOf("A", "2", "3","4","5","6","7","8","9","10","J", "Q", "K").toList()
     val _numberList: ArrayList<String> =
         arrayListOf("A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K")
 
-    //  Int型  1:スペード    2: ハート    3: ダイヤ     4:クローバー
-    //   val _markList : List<Int> = arrayOf(1, 2, 3, 4).toList()
-    val _markList: ArrayList<Int> = arrayListOf(1, 2, 3, 4)
+    val _markList: ArrayList<Int> = arrayListOf(1, 2, 3, 4)   //  Int型  1:スペード    2: ハート    3: ダイヤ     4:クローバー
 
-    //    val _tagList : List<String> = arrayOf("S", "H", "D", "C").toList()
     val _tagList: ArrayList<String> = arrayListOf("S", "H", "D", "C")
+
+    // LinkedHashMap　は　順序を記憶します どうやらputは使用せずにindexing operatorで追加するほうが良いようです。
+    // 通常のgetも存在しますが、putと同様にindexing operatorの使用が推奨されています。
+    val _distanceList: LinkedHashMap<Int, Int> = linkedMapOf(
+        1 to -6,
+        2 to -5,
+        3 to -4,
+        4 to -3,
+        5 to -2,
+        6 to -1,
+        7 to 0,  //  7を起点として、7からの 距離
+        8 to 1,
+        9 to 2,
+        10 to 3,
+        11 to 4,
+        12 to 5,
+        13 to 6
+    )
 
     /**
      * 最初に卓上に置かれているカードのリストを作成し返す.
@@ -122,7 +137,7 @@ class Game {
                     str = _tagList.get(i) + (j).toString()
                     possibleCard = PossibleCard(
                         str,  // "S7"  "H7"  "D7"  "C7"
-                        0,  //       7のカードを 起点
+                        _distanceList[j]!!,  //  0     7のカードを 起点   通常のgetも存在しますが、putと同様にindexing operatorの使用が推奨されています。
                         true,  // もうテーブルには置いている
                         false  // 次に置ける可能性のあるカードではありません (もうすでに置かれてるから)
                     )
@@ -131,7 +146,7 @@ class Game {
                     str = _tagList.get(i) + (j).toString()
                     possibleCard = PossibleCard(
                         str,  // "S6"  "H6"  "D6"  "C6"
-                        -1,  //        7のカードを 起点
+                        _distanceList[j]!!,  //   -1     7のカードを 起点
                         false,  // まだテーブルには置いてない
                         true  //  次に置ける可能性あり!!
                     )
@@ -140,27 +155,29 @@ class Game {
                     str = _tagList.get(i) + (j).toString()
                     possibleCard = PossibleCard(
                         str,   // "S8"  "H8"  "D8"  "C8"
-                        1,  //      7のカードを起点
+                        _distanceList[j]!!,  //   1      7のカードを起点
                         false,  // まだテーブルには置いてない
                         true  // 次に置ける可能性あり!!
                     )
                     hashSet.add(possibleCard)
                 } else if (j <= 5) {  // 1 2 3 4 5 のカード は false
-                    var distance: Int = j - 7 //  距離は -6 -5 -4 -3 -2  (7のカードを起点 0)
+                //    var distance: Int = j - 7 //  距離は -6 -5 -4 -3 -2  (7のカードを起点 0)
                     str = _tagList.get(i) + (j).toString()
                     possibleCard = PossibleCard(
                         str,
-                        distance, //   -6 -5 -4 -3 -2
+                        _distanceList[j]!!,
+                    //    distance, //   -6 -5 -4 -3 -2
                         false,  // まだテーブルには置いてない
                         false  // 次に置ける可能性無し
                     )
                     hashSet.add(possibleCard)
                 } else if (j >= 9) { //  9 10 11 12 13 のカードは false  距離は  2 3 4 5 6 (7のカードを起点 0)
-                    var distance: Int = j - 7  // 距離は  2 3 4 5 6 (7のカードを起点 0)
+                 //   var distance: Int = j - 7  // 距離は  2 3 4 5 6 (7のカードを起点 0)
                     str = _tagList.get(i) + (j).toString()
                     possibleCard = PossibleCard(
                         str,
-                        distance, //       2 3 4 5 6
+                        _distanceList[j]!!,
+                  //      distance, //       2 3 4 5 6
                         false,  // まだテーブルには置いてない
                         false  // 次に置ける可能性無し
                     )
@@ -171,4 +188,41 @@ class Game {
         }
         return hashSet
     }
+
+
+    /**
+     * n だけ先のオブジェクト取得.
+     */
+    fun getPossibleCard(set: Set<PossibleCard>, tag: String, n: Int): PossibleCard? {
+
+        var mark: String = tag.substring(0,1)  // "S"とか
+        var numInt: Int = tag.substring(1).toInt()  // 8 とか　今回は 8出したとすると
+        var newTagstr: String = mark + (numInt + n).toString()
+        var possibleCard: PossibleCard? = null
+        for (item in set) {
+            if(item.tag.equals(newTagstr)) {
+                possibleCard = item
+            }
+        }
+        return possibleCard
+    }
+
+    /**
+     *
+     */
+    fun getMinPossibleCard(set: Set<PossibleCard>, tag: String, i: Int): PossibleCard? {
+
+        var mark: String = tag.substring(0,1)  // "S"とか
+
+        var newTagstr: String = mark + i.toString() // 1 から 6まで
+
+        var possibleCard: PossibleCard? = null
+        for (item in set) {
+            if(item.tag.equals(newTagstr)) {
+                possibleCard = item
+            }
+        }
+        return possibleCard
+    }
+
 }

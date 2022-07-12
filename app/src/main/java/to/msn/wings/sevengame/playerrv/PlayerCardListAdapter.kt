@@ -9,6 +9,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
+import to.msn.wings.sevengame.Game
 import to.msn.wings.sevengame.MainActivity
 import to.msn.wings.sevengame.PossibleCard
 import to.msn.wings.sevengame.R
@@ -136,16 +137,55 @@ class PlayerCardListAdapter(
                     }
                 }
                 // さらに、_deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                var itemDistance = 0
                 for (item in _deepPossibleCardSet) {
                     if (item.tag.equals(txtViewPTag.text.toString())) {
                         item.placed = true  // 置いた
                         item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
-
-
+                        itemDistance = item.distance
                     }
                 }
-                // さらに、次に出せるカードの属性を変更する
+                // ここまでOKです
 
+                // さらに、次に出せるカードの属性を変更する
+                val game = Game()
+                val mark = (txtViewPTag.text.toString()).substring(0, 1)  // "S" とか
+                val numInt = (txtViewPTag.text.toString()).substring(1).toInt()  // 8　とか
+                val rangeMore: IntRange = 8..13
+                val rangeLess: IntRange = 1..6
+                val distanceMAX = 6
+                val MIN = 1
+                if (numInt in rangeMore) {  // +1づつ 直近のものから調べる
+                    for ( n in itemDistance..distanceMAX) {
+                        // メソッドでインスタンスを取得して属性をチェックする
+                        var card = game.getPossibleCard(_deepPossibleCardSet, txtViewPTag.text.toString(), n)
+                        if (card != null && card.placed == false) {
+                            card.possible = true
+                            break
+                            // ここまでの動きは OKです！！
+                        }
+                        // ループで 直近で  card.placed == falseの物を見つけていきます
+                        if (card != null && card.placed == true && n == distanceMAX) {  // 13まで調べたら
+                            for ( i in 1..6) {
+                                var card = game.getMinPossibleCard(
+                                    _deepPossibleCardSet,
+                                    txtViewPTag.text.toString(),
+                                    i
+                                ) // 1のカードを取得
+                                // また、 +1づつ直近から調べていって
+                                if (card != null && card.placed == false) {
+                                    card.possible = true
+                                    break
+                                }
+                            }
+                        }
+
+                    }
+                }else if (numInt in rangeLess) {
+
+                }
+
+                // 8 だったら  distance は　 1     distance + 1 ~   distance + 5  までループできる  distance + 5
                 // 今回出すことのできたカード "S8" ~ "S13"ならから  なら、 8　で考えてみると次は "S9"のはずですが  8 を +1づつしていって、  13まで
                 // placedが false なら、それのpossibleをtrueに変えます。そこでループをbreak もし placedが true　なら また、+1して、placedを見る
                 // 13 まで見て 13も placedが trueならば、 1 のplacedをみる  1が
@@ -156,12 +196,6 @@ class PlayerCardListAdapter(
                 // "S4"が placed trueなら -1  する "S2"が　　　　
                 // 1 まで見ても 1も placedが trueならば、 13 の placedをみる 13 が trueなら また -1 して 12 から 8 まで見て 8までいって
                 // 8もplacedが trueなら、何もせずにbreak
-
-
-
-                for (i in -6..6) {
-
-                }
 
                 // トースト表示
                 val toast: Toast = Toast.makeText(context, context.getString(R.string.put_on, txtViewPTag.text.toString()), Toast.LENGTH_SHORT)
