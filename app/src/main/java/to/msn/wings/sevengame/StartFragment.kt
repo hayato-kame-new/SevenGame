@@ -106,7 +106,7 @@ class StartFragment : Fragment() {
                 val deepPossibleCardSet = intent.getSerializableExtra("deepPossibleCardSet") as HashSet<PossibleCard>
                 val comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
                _playerList = intent.getSerializableExtra("data") as ArrayList<PlayerListItem>
-         //   _cardSet =  intent.getSerializableExtra("cardSet") as HashSet<String>
+        
             _tableCardData = intent.getSerializableExtra("tableCardData") as ArrayList<ListItem>
 
         //    _comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
@@ -126,19 +126,40 @@ class StartFragment : Fragment() {
                 _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
             }
 
-            // アダプターと同じ処理を繰り返し書くので、同じメソッドを使いまわせるように Gameクラスにメソッドを定義して使うようにします。Javaでいうstaticなメソッドを作る
-            // クラス名.メソッド名で呼び出しできるようにします kotlinではstaticメソッドはありません。ただしCompanion Objectsという仕組みを使えば実現できます
-                // まずAから
-            val subSet = getSubSet(deepPossibleCardSet, comAList)
-            var putStr = ""
-            var randomIndex = 0
-            var counter = 0
-            /////////////////// ここで
-
-            // ここから見直し _deepPossibleCardSet
+            // ここから見直し _deepPossibleCardSet  _deepComAList  ディープコピー
             val _deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
             val _deepPossibleCardSet = HashSet<PossibleCard>(deepPossibleCardSet)  // ディープコピーすること (同じ参照にしないこと)
-            ////////　ここからcomA
+            // アダプターと同じ処理を繰り返し書くので、同じメソッドを使いまわせるように Gameクラスにメソッドを定義して使うようにします。Javaでいうstaticなメソッドを作る
+            // クラス名.メソッド名で呼び出しできるようにします kotlinではstaticメソッドはありません。ただしCompanion Objectsという仕組みを使えば実現できます
+            // まずAから
+            // インデックで要素を取得したいなら、Listにすべきです Setは順番を持たないからです
+            val subList = getSubList(deepPossibleCardSet, comAList)
+            if (subList.size != 0) {  // Aは　出せるので出す
+                var putCard: PossibleCard? = null  // 出すカード
+                var randomIndex = 0
+                // nextInt() は 0 から引数に指定した値未満の整数を返します
+                randomIndex = Random.nextInt(subList.size)  // 3つ 出せるのがあったら 0 1 2　とかどれかが返ります　
+                putCard = subList.get(randomIndex)
+
+
+             //   for (item in subList) {
+
+//                   for (i in subSet.indices) {  // indicesプロパティは IntRange  インデックスの  ここでは 0..2  です (要素数3つだとしたら)
+//                        if (i == randomIndex) {
+//                            putCard = PossibleCard(
+//                                item.tag,
+//                                item.distance,
+//                                item.placed,
+//                                item.possible
+//                            )
+//                        }
+//                  }
+
+             //   }
+
+            } else {  // Aは　出せない
+
+            }
 
 
 //
@@ -391,16 +412,22 @@ class StartFragment : Fragment() {
         return subList
         }
 
-    fun <T> getSubSet(set: Set<T>, list: List<PlayerListItem>): HashSet<String> {
-        val subSet: HashSet<String> = HashSet()  // HashSet
-        for (s in set) {
+
+    /**
+     * オーバーロード(多重定義)
+     * インデックで要素を取得したいなら、Listにすべきです Setは順番を持たないからです
+     * 戻り値 ArrayList<PossibleCard>型です
+     */
+    fun getSubList(set: HashSet<PossibleCard>, list: ArrayList<PlayerListItem>): ArrayList<PossibleCard> {
+        val arrayList: ArrayList<PossibleCard> = ArrayList()
+        for (possibleCard in set) {
             for (item in list) {
-                if (s!!.equals(item.pTag)) {
-                    subSet.add(s.toString())
+                if (possibleCard.tag.equals(item.pTag) && possibleCard.possible == true) {
+                    arrayList.add(possibleCard)
                 }
             }
         }
-        return subSet
+        return arrayList
     }
 
 }
