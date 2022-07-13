@@ -113,12 +113,7 @@ class PlayerCardListAdapter(
         cardView.setOnClickListener {
             val txtViewPTag = it.findViewById<TextView>(R.id.pTag)  // ラムダの中で、クリックしたビューのタグを取得する 変数名に気を付ける
             //   Log.i("ok", txtViewPTag.text.toString() + "です" + it.toString() + "です クラスは" + it.javaClass)
-
-
            val context = holder.itemView.context // MainActivity が取得できてる
-         //   val intent = Intent(context, MainActivity::class.java)
-
-
 
             val txtP = it.findViewById<TextView>(R.id.pTag)
 

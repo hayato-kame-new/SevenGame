@@ -133,14 +133,15 @@ class StartFragment : Fragment() {
             // アダプターと同じ処理を繰り返し書くので、同じメソッドを使いまわせるように Gameクラスにメソッドを定義して使うようにします。Javaでいうstaticなメソッドを作る
             // クラス名.メソッド名で呼び出しできるようにします kotlinではstaticメソッドはありません。ただしCompanion Objectsという仕組みを使えば実現できます
             // まずAから
-            // インデックで要素を取得したいなら、Listにすべきです Setは順番を持たないからです
-            val subList = getSubList(deepPossibleCardSet, comAList)
-            if (subList.size != 0) {  // Aは　出せるので出す
+            // インデックスで要素を取得したいなら、Listにすべきです Setは順番を持たないからです
+            val subListComA = getSubList(deepPossibleCardSet, comAList)  // リストにします
+            if (subListComA.size != 0) {  // Aは　出せるので出す
+
                 var putCard: PossibleCard? = null  // 出すカード
                 var randomIndex = 0
                 // nextInt() は 0 から引数に指定した値未満の整数を返します
-                randomIndex = Random.nextInt(subList.size)  // 3つ 出せるのがあったら 0 1 2　とかどれかが返ります　
-                putCard = subList.get(randomIndex)
+                randomIndex = Random.nextInt(subListComA.size)  // 3つ 出せるのがあったら 0 1 2　とかどれかが返ります　
+                putCard = subListComA.get(randomIndex)
                 // まずは プレイヤーの持ち手リスト_deepComAList から、出したカードを取り除く
                 // java.util.ConcurrentModificationException を回避するために forは使わないでください
                 val iterator = _deepComAList.iterator()  // 元のコレクションを書き換えます エラーなしで
@@ -166,70 +167,74 @@ class StartFragment : Fragment() {
                         itemDistance = item.distance  // 6だったら -1 になる
                     }
                 }
-                // さらに、次に出せるカードの属性を変更する
-                val mark = putCard.tag.substring(0, 1)  // "S" とか
-                val numInt = (putCard.tag).substring(1).toInt()  // 8　とか 6 とか
-                val rangeMore: IntRange = 8..13
-                val rangeLess: IntRange = 1..6
-                val distanceMAX = 6
-                val distanceMIN = -6
-                if (numInt in rangeMore) {  // +1づつ 直近のものから調べる
+                changeSet(_deepPossibleCardSet, putCard)
+ //////////
+//                // さらに、次に出せるカードの属性を変更する
+//                val mark = putCard.tag.substring(0, 1)  // "S" とか
+//                val numInt = (putCard.tag).substring(1).toInt()  // 8　とか 6 とか
+//                val rangeMore: IntRange = 8..13
+//                val rangeLess: IntRange = 1..6
+//                val distanceMAX = 6
+//                val distanceMIN = -6
+//                if (numInt in rangeMore) {  // +1づつ 直近のものから調べる
+//
+//                    for ( n in 1..6) {
+//                        // メソッドでインスタンスを取得して属性をチェックする  getNPossibleCard N個先のカードを取得する
+//                        var card = _game.getNPossibleCard(_deepPossibleCardSet, putCard.tag, n)
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる
+//                            break // 抜ける
+//                            // ここまでの動きは OKです！！
+//                        }
+//                        // ループで 直近で  card.placed == falseの物を見つけていきます
+//                        if (card != null && card.placed == true && n == distanceMAX) {  // 13まで調べたら
+//                            for ( num in 1..6) {  // 数字が 1から6までのカードを調べる
+//                                var card = _game.getPossibleCard(
+//                                    _deepPossibleCardSet,
+//                                    putCard.tag,
+//                                    num
+//                                ) // 1のカードを取得
+//
+//                                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                                    card.possible = true // 可能に trueを入れる
+//                                    break // 抜ける
+//                                }
+//                                // また、 +1づつ直近から調べていって  6までみて 6も trueなら何もせずに抜ける
+//                            }
+//                        }
+//
+//                    }
+//                } else if (numInt in rangeLess) {  // 1..6
+//                    // 6 なら itemDistance -1
+//                    //    for ( n in distanceMIN downTo itemDistance) { //  -6　~　-1 の間を -1から順に調べたい時 downTo と使うと -1 から始まり逆順に -2 -3 -4 -5 -6 となる
+//                    for ( n in -1 downTo -6) {
+//                        // n が -1 ならば -1 -2 -3 -4 -5 -6 までループさせる
+//                        var card = _game.getNPossibleCard(_deepPossibleCardSet, putCard.tag, n)
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる
+//                            break // 抜ける
+//                            // ここまでの動きは OKです！！
+//                        }
+//
+//                        if (card != null && card.placed == true && n == distanceMIN) {  // 1まで調べたら n == -6 の時
+//                            for ( num in 8 downTo 13) {  // 数字が 13から8までのカードを調べる downTo と使うと 13から始まり逆順に 12 11 10 9 8 とループする
+//                                var card = _game.getPossibleCard(
+//                                    _deepPossibleCardSet,
+//                                    putCard.tag,
+//                                    num
+//                                ) // 13 のカードを取得
+//                                if (card != null && card.placed == false) {  // もし、まだ置いてないカードが見つかった時点で
+//                                    card.possible = true  // 可能に trueを入れる
+//                                    break  // 抜ける
+//                                }
+//                                // また、 -1づつ直近から調べていって 8もplacedが trueなら、何もせずにループは終わり
+//                            }
+//                        }
+//                    }
+//                }
 
-                    for ( n in 1..6) {
-                        // メソッドでインスタンスを取得して属性をチェックする  getNPossibleCard N個先のカードを取得する
-                        var card = _game.getNPossibleCard(_deepPossibleCardSet, putCard.tag, n)
-                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-                            card.possible = true // 可能に trueを入れる
-                            break // 抜ける
-                            // ここまでの動きは OKです！！
-                        }
-                        // ループで 直近で  card.placed == falseの物を見つけていきます
-                        if (card != null && card.placed == true && n == distanceMAX) {  // 13まで調べたら
-                            for ( num in 1..6) {  // 数字が 1から6までのカードを調べる
-                                var card = _game.getPossibleCard(
-                                    _deepPossibleCardSet,
-                                    putCard.tag,
-                                    num
-                                ) // 1のカードを取得
-
-                                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-                                    card.possible = true // 可能に trueを入れる
-                                    break // 抜ける
-                                }
-                                // また、 +1づつ直近から調べていって  6までみて 6も trueなら何もせずに抜ける
-                            }
-                        }
-
-                    }
-                } else if (numInt in rangeLess) {  // 1..6
-                    // 6 なら itemDistance -1
-                    //    for ( n in distanceMIN downTo itemDistance) { //  -6　~　-1 の間を -1から順に調べたい時 downTo と使うと -1 から始まり逆順に -2 -3 -4 -5 -6 となる
-                    for ( n in -1 downTo -6) {
-                        // n が -1 ならば -1 -2 -3 -4 -5 -6 までループさせる
-                        var card = _game.getNPossibleCard(_deepPossibleCardSet, putCard.tag, n)
-                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-                            card.possible = true // 可能に trueを入れる
-                            break // 抜ける
-                            // ここまでの動きは OKです！！
-                        }
-
-                        if (card != null && card.placed == true && n == distanceMIN) {  // 1まで調べたら n == -6 の時
-                            for ( num in 8 downTo 13) {  // 数字が 13から8までのカードを調べる downTo と使うと 13から始まり逆順に 12 11 10 9 8 とループする
-                                var card = _game.getPossibleCard(
-                                    _deepPossibleCardSet,
-                                    putCard.tag,
-                                    num
-                                ) // 13 のカードを取得
-                                if (card != null && card.placed == false) {  // もし、まだ置いてないカードが見つかった時点で
-                                    card.possible = true  // 可能に trueを入れる
-                                    break  // 抜ける
-                                }
-                                // また、 -1づつ直近から調べていって 8もplacedが trueなら、何もせずにループは終わり
-                            }
-                        }
-                    }
-                }
-                // トースト表示
+    //////
+                // comA トースト表示
                 val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_put_on, putCard.tag), Toast.LENGTH_SHORT)
                 toast.show()
 
@@ -260,6 +265,7 @@ class StartFragment : Fragment() {
                     _deepComAList.clear()
                     // 卓上に並べる
 
+
                     // _deepCardSetも変更する
 
 
@@ -277,8 +283,12 @@ class StartFragment : Fragment() {
             }
                 ////////　ここまでcomA
                 ////////　ここからcomB
-//            val subList = getSubList(deepPossibleCardSet, comBList)
-//            if (subList.size != 0) {  // Bは　出せるので出す
+
+            // インデックスで要素を取得したいなら、Listにすべきです Setは順番を持たないからです
+//            val subListComB = getSubList(deepPossibleCardSet, comBList)  // リストにします
+//            if (subListComB.size != 0) {  // Bは　出せるので出す
+//
+//            }
 
 
 
@@ -416,5 +426,69 @@ class StartFragment : Fragment() {
         }
         return arrayList
     }
+
+
+    /**
+     * コンピュータの手の動き カードのセットの属性の変更
+     * _deepPossibleCardSetが実引数
+     */
+    fun changeSet(set: HashSet<PossibleCard>, putCard: PossibleCard?) {
+        val mark = putCard?.tag?.substring(0, 1)  // "S" とか
+        val numInt = (putCard?.tag)?.substring(1)?.toInt()  // 8　とか 6 とか
+        val rangeMore: IntRange = 8..13
+        val rangeLess: IntRange = 1..6
+        val distanceMAX = 6
+        val distanceMIN = -6
+        if (numInt in rangeMore) {  // +1づつ 直近のものから調べる
+            for (n in 1..6) {
+                // メソッドでインスタンスを取得して属性をチェックする  getNPossibleCard N個先のカードを取得する
+                var card = _game.getNPossibleCard(set, putCard!!.tag, n)
+                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+                    card.possible = true // 可能に trueを入れる
+                    break // 抜ける
+                    // ここまでの動きは OKです！！
+                }
+                // ループで 直近で  card.placed == falseの物を見つけていきます
+                if (card != null && card.placed == true && n == distanceMAX) {  // 13まで調べたら
+                    for (num in 1..6) {  // 数字が 1から6までのカードを調べる
+                        var card = _game.getPossibleCard(
+                            set, // _deepPossibleCardSetが実引数
+                            putCard!!.tag,
+                            num
+                        ) // 1のカードを取得
+                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+                            card.possible = true // 可能に trueを入れる
+                            break // 抜ける
+                        }
+                        // また、 +1づつ直近から調べていって  6までみて 6も trueなら何もせずに抜ける
+                    }
+                }
+            }
+        } else if (numInt in rangeLess) {  // 1..6
+            for (n in -1 downTo -6) {
+                // n が -1 ならば -1 -2 -3 -4 -5 -6 までループさせる
+                var card = _game.getNPossibleCard(set, putCard!!.tag, n)
+                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+                    card.possible = true // 可能に trueを入れる
+                    break // 抜ける
+                }
+                if (card != null && card.placed == true && n == distanceMIN) {  // 1まで調べたら n == -6 の時
+                    for (num in 8 downTo 13) {  // 数字が 13から8までのカードを調べる downTo と使うと 13から始まり逆順に 12 11 10 9 8 とループする
+                        var card = _game.getPossibleCard(
+                            set,  // _deepPossibleCardSetが実引数
+                            putCard.tag,
+                            num
+                        ) // 13 のカードを取得
+                        if (card != null && card.placed == false) {  // もし、まだ置いてないカードが見つかった時点で
+                            card.possible = true  // 可能に trueを入れる
+                            break  // 抜ける
+                        }
+                        // また、 -1づつ直近から調べていって 8もplacedが trueなら、何もせずにループは終わり
+                    }
+                }
+            }
+        }
+    }
+
 
 }

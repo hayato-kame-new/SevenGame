@@ -42,6 +42,15 @@ class Game {
     )
 
     /**
+     * Javaで言う staticメソッド 静的メソッドのようなもの
+     */
+    companion object {
+        fun staticMethodTest() {
+
+        }
+    }
+
+    /**
      * 最初に卓上に置かれているカードのリストを作成し返す.
      * 最初に 7のカードだけが置かれている状態になるようにする.
      * 戻り値の型は ArrayList にすること
