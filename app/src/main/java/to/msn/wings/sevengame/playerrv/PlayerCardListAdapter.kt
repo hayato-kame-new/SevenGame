@@ -234,7 +234,7 @@ class PlayerCardListAdapter(
                // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
                 intent.putExtra("data", _deepDataList as ArrayList<PlayerListItem> )
                 //  自作したクラス PossibleCardを intentで送るためには Serializableインタフェースを実装します
-                intent.putExtra("deepPossibleCardSet", _deepPossibleCardSet as HashSet<PossibleCard>)
+                intent.putExtra("set", _deepPossibleCardSet as HashSet<PossibleCard>)
                 // 注意点 ListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要があります
                 intent.putExtra("tableCardData", _tableCardData as ArrayList<ListItem>)
                 intent.putExtra("comAList", _deepComAList as ArrayList<PlayerListItem>)

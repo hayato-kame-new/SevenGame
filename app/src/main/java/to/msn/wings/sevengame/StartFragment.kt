@@ -103,7 +103,7 @@ class StartFragment : Fragment() {
             /* 遷移してきたとき
             */
             // lateinit varフィールドに 初期値を代入する  直接入れないで一旦違う変数に入れておいた方がいいかも??
-                val deepPossibleCardSet = intent.getSerializableExtra("deepPossibleCardSet") as HashSet<PossibleCard>
+                val deepPossibleCardSet = intent.getSerializableExtra("set") as HashSet<PossibleCard>
                 val comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
                _playerList = intent.getSerializableExtra("data") as ArrayList<PlayerListItem>
         
@@ -239,53 +239,52 @@ class StartFragment : Fragment() {
 
                 // もうパスできない
                 val intent = Intent(activity, MainActivity::class.java)
-                //                if (_comAPassCounter == 0 && _comBPassCounter == 0) { // 終了
-//                    // あなたの勝ちですダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
-//                    AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
-//                        .setTitle("あなたの勝ちです")
-//                        .setMessage("ゲーム再開する")
-//                        .setPositiveButton("OK", { dialog, which ->
-//                            activity?.startActivity(intent)  // ここで遷移する
-//                        })
-//                        .show()
-//                    // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
-//
-//                } else if (_comAPassCounter == 0 && _comBPassCounter != 0) {
-//                    // comAの負けです トースト出す  comA手持ちを全て出す  comBとあなたでゲームは続く
-//                    val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_lose), Toast.LENGTH_SHORT)
-//                    toast.show()
-//                    // comA負けたので手持ちを全て出す _deepComAListを変更空にする　_deepCardSetも変更すること 卓上にも並べること
-//                    val sub = arrayListOf(_deepComAList)  // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
-//                    // _deepComAListを変更空にする リスト内の全要素を削除
-//                    _deepComAList.clear()
-//                    // 卓上に並べる
-//
-//                    // _deepCardSetも変更する
-//
-//
-//                } else {
-//                    // まだゲームは続けられる　 3人とも続いてる
-//                    _comAPassCounter--
-//                    _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"
-//                    _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
-//                    if (_comAPassCounter == 0) {
-//                        _aTxt.text = "コンピューターA パス 残りなし"
-//                        _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
-//                    }
-//                    // comAはパスしたから パスカウンターだけをマイナスするだけ
-//                }
-//            }
+                 if (_comAPassCounter == 0 && _comBPassCounter == 0) { // 終了
+                    // あなたの勝ちですダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
+                    AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
+                        .setTitle("あなたの勝ちです")
+                        .setMessage("ゲーム再開する")
+                        .setPositiveButton("OK", { dialog, which ->
+                            activity?.startActivity(intent)  // ここで遷移する
+                        })
+                        .show()
+                    // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
+
+                } else if (_comAPassCounter == 0 && _comBPassCounter != 0) {
+                    // comAの負けです トースト出す  comA手持ちを全て出す  comBとあなたでゲームは続く
+                    val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_lose), Toast.LENGTH_SHORT)
+                    toast.show()
+                    // comA負けたので手持ちを全て出す _deepComAListを変更空にする　_deepCardSetも変更すること 卓上にも並べること
+                    val sub = arrayListOf(_deepComAList)  // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
+                    // _deepComAListを変更空にする リスト内の全要素を削除
+                    _deepComAList.clear()
+                    // 卓上に並べる
+
+                    // _deepCardSetも変更する
+
+
+                } else {
+                    // まだゲームは続けられる　 3人とも続いてる
+                    _comAPassCounter--
+                    _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"
+                    _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
+                    if (_comAPassCounter == 0) {
+                        _aTxt.text = "コンピューターA パス 残りなし"
+                        _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
+                    }
+                    // comAはパスしたから パスカウンターだけをマイナスするだけ
+                }
+            }
                 ////////　ここまでcomA
                 ////////　ここからcomB
+//            val subList = getSubList(deepPossibleCardSet, comBList)
+//            if (subList.size != 0) {  // Bは　出せるので出す
 
 
 
 
-                ////////　ここまでcomB
 
 
-
-            }
 
 
 
@@ -302,6 +301,8 @@ class StartFragment : Fragment() {
         }
 
 
+
+
         view.findViewById<Button>(R.id.passBtn).also {
             _passBtn = it!!
             _passBtn.text = "パス 残り " + _playerPassCounter.toString() + "回"  // 最初 3
@@ -310,6 +311,7 @@ class StartFragment : Fragment() {
                 _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
             }
         }
+
 
         _passBtn.setOnClickListener {
             val intent = Intent(activity, MainActivity::class.java)
@@ -334,12 +336,12 @@ class StartFragment : Fragment() {
                     _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
                 }
                 // あなたがパスしたから 8つ intent.putExtraして、またMainActivity elseブロックへ戻ってきます
-                intent.putExtra( "data" ,_playerList)
-                intent.putExtra("possibleCardSet", _possibleCardSet)
+                intent.putExtra( "data" ,_playerList as ArrayList<PlayerListItem>)
+                intent.putExtra("set", _possibleCardSet as HashSet<PossibleCard>)
 
-                intent.putExtra( "tableCardData" ,_tableCardData)
-                 intent.putExtra( "comAList", _comAList)
-                 intent.putExtra( "comBList", _comBList )
+                intent.putExtra( "tableCardData" ,_tableCardData as ArrayList<ListItem>)
+                 intent.putExtra( "comAList", _comAList as ArrayList<PlayerListItem>)
+                 intent.putExtra( "comBList", _comBList as ArrayList<PlayerListItem>)
                 intent.putExtra("pPassCount", _playerPassCounter)
                 intent.putExtra("comAPassCount", _comAPassCounter)
                 intent.putExtra("comBPassCount", _comBPassCounter)
