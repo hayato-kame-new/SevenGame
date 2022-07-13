@@ -161,6 +161,7 @@ class PlayerCardListAdapter(
                 val game = Game()
              //   val mark = (txtP.text.toString()).substring(0, 1)  // "S" とか
                 val numInt = (txtP.text.toString()).substring(1).toInt()  // 8　とか 6 とか
+                // もし、出したカードが １３だったら、 ループで探して、
                 val rangeMore: IntRange = 8..13
                 val rangeLess: IntRange = 1..6
                 val distanceMAX = 6
@@ -177,16 +178,23 @@ class PlayerCardListAdapter(
                             // ここまでの動きは OKです！！
                         }
                         // ループで 直近で  card.placed == falseの物を見つけていきます
-                        if (card != null && card.placed == true && n == distanceMAX) {  // 13まで調べたら
+                        // ここ変更しました 多分これで大丈夫かな？
+                        // "K"を置いたのに "5"が置けてしまったので、 "5"を possibleを falseにする処理を書かないといけない
+
+                    //     if (card != null && card.placed == true && n == distanceMAX) {  // 13まで調べたら
+                        if (card != null && card.placed == true ) {  // 13まで調べても 13もすでに置いてあるならば
                             for ( num in 1..6) {  // 数字が 1から6までのカードを調べる
                                 var card = game.getPossibleCard(
                                     _deepPossibleCardSet,
                                     txtP.text.toString(),
                                     num
-                                ) // 1のカードを取得
+                                ) // 最初のループの時に　1のカードを取得
 
                                 if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
                                     card.possible = true // 可能に trueを入れる
+                                    //  trueを入れる をしたら、 もし、出したカードが １３だったら、 ループで探して
+                                    // 例えば "1" を trueにしたら、もし、 +1 のカード(2)から 6のカードで、まだ置いてなくて、possibleが trueのものが
+                                    // あったら、それを possible falseに 変更しないといけない
                                     break // 抜ける
                                 }
                                 // また、 +1づつ直近から調べていって  6までみて 6も trueなら何もせずに抜ける
@@ -206,15 +214,21 @@ class PlayerCardListAdapter(
                             // ここまでの動きは OKです！！
                         }
 
-                        if (card != null && card.placed == true && n == distanceMIN) {  // 1まで調べたら n == -6 の時
+                        // ここ違うらしい "A"になっても "K"が置けないよ 変更しました 多分これで大丈夫？？
+                        // "1"を置いたのに "9"が置けてしまったので、 "9"を possibleを falseにする処理を書かないといけない
+                      //  if (card != null && card.placed == true && n == distanceMIN) {  // 1まで調べたら n == -6 の時
+                        if (card != null && card.placed == true ) { // 1まで調べても 1もすでに置いてあるならば
                             for ( num in 8 downTo 13) {  // 数字が 13から8までのカードを調べる downTo と使うと 13から始まり逆順に 12 11 10 9 8 とループする
                                 var card = game.getPossibleCard(
                                     _deepPossibleCardSet,
                                     txtP.text.toString(),
                                     num
-                                ) // 13 のカードを取得
+                                ) // 最初のループの時に13 のカードを取得
                                 if (card != null && card.placed == false) {  // もし、まだ置いてないカードが見つかった時点で
                                     card.possible = true  // 可能に trueを入れる
+                                    //  trueを入れる をしたら、 もし、出したカードが 1だったら、
+                                    // 例えば "13" を trueにしたら、もし、 -1 のカード(12)から 8のカードで、まだ置いてなくて、possibleが trueのものが
+                                    // あったら、それを possible  falseに 変更しないといけない
                                     break  // 抜ける
                                 }
                                 // また、 -1づつ直近から調べていって 8もplacedが trueなら、何もせずにループは終わり

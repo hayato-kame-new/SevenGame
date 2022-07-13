@@ -105,12 +105,13 @@ class StartFragment : Fragment() {
             // lateinit varフィールドに 初期値を代入する  直接入れないで一旦違う変数に入れておいた方がいいかも??
                 val deepPossibleCardSet = intent.getSerializableExtra("set") as HashSet<PossibleCard>
                 val comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
+                val comBList = intent.getStringArrayListExtra("comBList") as ArrayList<PlayerListItem>
                _playerList = intent.getSerializableExtra("data") as ArrayList<PlayerListItem>
         
             _tableCardData = intent.getSerializableExtra("tableCardData") as ArrayList<ListItem>
 
         //    _comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
-            _comBList = intent.getStringArrayListExtra("comBList") as ArrayList<PlayerListItem>
+         //   _comBList = intent.getStringArrayListExtra("comBList") as ArrayList<PlayerListItem>
             _playerPassCounter = intent.getIntExtra("pPassCount", 0)
             _comAPassCounter = intent.getIntExtra("comAPassCount", 0)
             _comBPassCounter = intent.getIntExtra("comBPassCount", 0)
@@ -129,42 +130,49 @@ class StartFragment : Fragment() {
             // ここから見直し _deepPossibleCardSet  _deepComAList  ディープコピー
             // _deepPossibleCardSet　ディープコピーしたもの (新たに 別のオブジェクト) ディープコピーにしないとエラー
             val _deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
+            val _deepComBList = ArrayList<PlayerListItem>(comBList) // ディープコピーすること 同じ参照にしないこと
             val _deepPossibleCardSet = HashSet<PossibleCard>(deepPossibleCardSet)  // ディープコピーすること (同じ参照にしないこと)
             // アダプターと同じ処理を繰り返し書くので、同じメソッドを使いまわせるように Gameクラスにメソッドを定義して使うようにします。Javaでいうstaticなメソッドを作る
             // クラス名.メソッド名で呼び出しできるようにします kotlinではstaticメソッドはありません。ただしCompanion Objectsという仕組みを使えば実現できます
             // まずAから
-            // インデックスで要素を取得したいなら、Listにすべきです Setは順番を持たないからです
+            // サブリストを取得する そのリストは後で インデックスで要素を取得したいので、Listにすべきです Setは順番を持たないからです
+            // 置くことのできそうなカードを探してリストにする 複数見つかる時もあるし、空のリストを返す時もある
             val subListComA = getSubList(deepPossibleCardSet, comAList)  // リストにします
             if (subListComA.size != 0) {  // Aは　出せるので出す
+                // まずは プレイヤーの持ち手リスト_deepComAList から、置いたカードを取り除く  戻り値置いたカード
+                var putCard: PossibleCard? = null
+                putCard = removeComPutCard(subListComA, _deepComAList)
 
-                var putCard: PossibleCard? = null  // 出すカード
-                var randomIndex = 0
-                // nextInt() は 0 から引数に指定した値未満の整数を返します
-                randomIndex = Random.nextInt(subListComA.size)  // 3つ 出せるのがあったら 0 1 2　とかどれかが返ります　
-                putCard = subListComA.get(randomIndex)
-                // まずは プレイヤーの持ち手リスト_deepComAList から、出したカードを取り除く
-                // java.util.ConcurrentModificationException を回避するために forは使わないでください
-                val iterator = _deepComAList.iterator()  // 元のコレクションを書き換えます エラーなしで
-                while (iterator.hasNext()){
-                    val item = iterator.next()
-                    if (item.pTag.equals(putCard.tag)) {
-                        iterator.remove()
-                    }
-                }
+//                var putCard: PossibleCard? = null  // 出すカード
+//                var randomIndex = 0
+//                // nextInt() は 0 から引数に指定した値未満の整数を返します
+//                randomIndex = Random.nextInt(subListComA.size)  // 3つ 出せるのがあったら 0 1 2　とかどれかが返ります　
+//                putCard = subListComA.get(randomIndex)
+//                // まずは プレイヤーの持ち手リスト_deepComAList から、出したカードを取り除く
+//                // ここからメソッド化すること
+//                // java.util.ConcurrentModificationException を回避するために forは使わないでください
+//                val iterator = _deepComAList.iterator()  // 元のコレクションを書き換えます エラーなしで
+//                while (iterator.hasNext()){
+//                    val item = iterator.next()
+//                    if (item.pTag.equals(putCard.tag)) {
+//                        iterator.remove()
+//                    }
+//                }
+
                 // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                 for (item in _tableCardData) {
 
-                    if (item.tag.equals(putCard.tag)) {
+                    if (item.tag.equals(putCard?.tag)) {
                         item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
                     }
                 }
                 // さらに、_deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-                var itemDistance = 0
+               // var itemDistance = 0
                 for (item in _deepPossibleCardSet) {
-                    if (item.tag.equals(putCard.tag)) {
+                    if (item.tag.equals(putCard?.tag)) {
                         item.placed = true  // 置いた
                         item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
-                        itemDistance = item.distance  // 6だったら -1 になる
+                      //  itemDistance = item.distance  // 6だったら -1 になる
                     }
                 }
                 changeSet(_deepPossibleCardSet, putCard)
@@ -235,7 +243,7 @@ class StartFragment : Fragment() {
 
     //////
                 // comA トースト表示
-                val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_put_on, putCard.tag), Toast.LENGTH_SHORT)
+                val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_put_on, putCard!!.tag), Toast.LENGTH_SHORT)
                 toast.show()
 
             } else {  // Aは　出せない パスをします！！
@@ -285,10 +293,27 @@ class StartFragment : Fragment() {
                 ////////　ここからcomB
 
             // インデックスで要素を取得したいなら、Listにすべきです Setは順番を持たないからです
-//            val subListComB = getSubList(deepPossibleCardSet, comBList)  // リストにします
-//            if (subListComB.size != 0) {  // Bは　出せるので出す
-//
-//            }
+            val subListComB = getSubList(deepPossibleCardSet, comBList)  // リストにします
+            if (subListComB.size != 0) {  // Bは　出せるので出す
+
+                var putCard: PossibleCard? = null  // 出すカード
+                var randomIndex = 0
+                // nextInt() は 0 から引数に指定した値未満の整数を返します
+                randomIndex = Random.nextInt(subListComB.size)  // 3つ 出せるのがあったら 0 1 2　とかどれかが返ります　
+                putCard = subListComB.get(randomIndex)
+                // まずは プレイヤーの持ち手リスト_deepComAList から、出したカードを取り除く
+                // ここからメソッド化すること
+                // java.util.ConcurrentModificationException を回避するために forは使わないでください
+                val iterator = _deepComBList.iterator()  // 元のコレクションを書き換えます エラーなしで
+                while (iterator.hasNext()){
+                    val item = iterator.next()
+                    if (item.pTag.equals(putCard.tag)) {
+                        iterator.remove()
+                    }
+                }
+
+
+            }
 
 
 
@@ -303,8 +328,9 @@ class StartFragment : Fragment() {
             _possibleCardSet = HashSet<PossibleCard>(_deepPossibleCardSet)  // ディープコピーすること (同じ参照にしないこと)
             // ここで lateinit varフィールドに 初期値を代入する
               _comAList = ArrayList<PlayerListItem>(_deepComAList) // ディープコピーすること 同じ参照にしないこと
+
             // ここで lateinit varフィールドに 初期値を代入する
-            // _comBList = ArrayList<PlayerListItem>(_deepComBList) // ディープコピーすること 同じ参照にしないこと
+             _comBList = ArrayList<PlayerListItem>(_deepComBList) // ディープコピーすること 同じ参照にしないこと
 
             /* 遷移してきたときここまで
             */
@@ -412,7 +438,9 @@ class StartFragment : Fragment() {
 
     /**
      * オーバーロード(多重定義)
-     * インデックで要素を取得したいなら、Listにすべきです Setは順番を持たないからです
+     * インデックで要素を取得したいなら、戻り値は Listにすべきです Setは順番を持たないからです
+     * HashSet<PossibleCard>　の中から 同じタグで かつ possible属性が true の PossibleCardオブジェクトを取得
+     * 置くことのできそうなカードを探してリストにする 複数見つかる時もあるし、空のリストを返す時もある
      * 戻り値 ArrayList<PossibleCard>型です
      */
     fun getSubList(set: HashSet<PossibleCard>, list: ArrayList<PlayerListItem>): ArrayList<PossibleCard> {
@@ -449,7 +477,7 @@ class StartFragment : Fragment() {
                     // ここまでの動きは OKです！！
                 }
                 // ループで 直近で  card.placed == falseの物を見つけていきます
-                if (card != null && card.placed == true && n == distanceMAX) {  // 13まで調べたら
+                if (card != null && card.placed == true ) {  // 13まで調べたら
                     for (num in 1..6) {  // 数字が 1から6までのカードを調べる
                         var card = _game.getPossibleCard(
                             set, // _deepPossibleCardSetが実引数
@@ -472,7 +500,7 @@ class StartFragment : Fragment() {
                     card.possible = true // 可能に trueを入れる
                     break // 抜ける
                 }
-                if (card != null && card.placed == true && n == distanceMIN) {  // 1まで調べたら n == -6 の時
+                if (card != null && card.placed == true ) {  // 1まで調べたら n == -6 の時
                     for (num in 8 downTo 13) {  // 数字が 13から8までのカードを調べる downTo と使うと 13から始まり逆順に 12 11 10 9 8 とループする
                         var card = _game.getPossibleCard(
                             set,  // _deepPossibleCardSetが実引数
@@ -489,6 +517,32 @@ class StartFragment : Fragment() {
             }
         }
     }
+
+    /**
+     * プレイヤーの持ち手リストから 出したカードを取り除く.
+     * java.util.ConcurrentModificationException を回避するために forは使わないでください
+     *  subListComA _deepComAListを実引数にとる
+     */
+    fun removeComPutCard( sublist: ArrayList<PossibleCard>, comList: ArrayList<PlayerListItem>): PossibleCard? {
+        var putCard: PossibleCard? = null  // 出すカード
+        var randomIndex = 0
+        // nextInt() は 0 から引数に指定した値未満の整数を返します
+        randomIndex = Random.nextInt(sublist.size)  // 3つ 出せるのがあったら 0 1 2　とかどれかが返ります　
+        putCard = sublist.get(randomIndex)
+        // まずは プレイヤーの持ち手リスト_deepComAList から、出したカードを取り除く
+        // ここからメソッド化すること
+        // java.util.ConcurrentModificationException を回避するために forは使わないでください
+        val iterator = comList.iterator()  // 元のコレクションを書き換えます エラーなしで
+        while (iterator.hasNext()){
+            val item = iterator.next()
+            if (item.pTag.equals(putCard.tag)) {
+                iterator.remove()
+            }
+        }
+        return putCard
+    }
+
+
 
 
 }
