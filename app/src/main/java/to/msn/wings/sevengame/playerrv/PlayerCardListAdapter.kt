@@ -133,10 +133,7 @@ class PlayerCardListAdapter(
             // 判断した結果によって分岐する
             if (decision == true) {
                 // クリックしたものはクリックしたものは置けるカードでしたので 処理をして、遷移する
-
-
                val intent = Intent(context, MainActivity::class.java)  // MainActivityから MainActivityへデータを送り 戻る
-
 
                 // まずは プレイヤーの持ち手リスト_deepDataList から、出したカードを取り除く
                 // java.util.ConcurrentModificationException を回避するために forは使わないでください
@@ -156,27 +153,28 @@ class PlayerCardListAdapter(
                     }
                 }
                 // さらに、_deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-                var itemDistance = 0
+             //   var itemDistance = 0
                 for (item in _deepPossibleCardSet) {
                     if (item.tag.equals(txtP.text.toString())) {
                         item.placed = true  // 置いた
                         item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
-                        itemDistance = item.distance  // 6だったら -1 になる
+                     //   itemDistance = item.distance  // 6だったら -1 になる
                     }
                 }
 
                 // さらに、次に出せるカードの属性を変更する
                 val game = Game()
-                val mark = (txtP.text.toString()).substring(0, 1)  // "S" とか
+             //   val mark = (txtP.text.toString()).substring(0, 1)  // "S" とか
                 val numInt = (txtP.text.toString()).substring(1).toInt()  // 8　とか 6 とか
                 val rangeMore: IntRange = 8..13
                 val rangeLess: IntRange = 1..6
                 val distanceMAX = 6
                 val distanceMIN = -6
-                val MIN = 1
+
                 if (numInt in rangeMore) {  // +1づつ 直近のものから調べる
-                    for ( n in itemDistance..distanceMAX) {
+                    for ( n in 1..6) {
                         // メソッドでインスタンスを取得して属性をチェックする  getNPossibleCard N個先のカードを取得する
+
                         var card = game.getNPossibleCard(_deepPossibleCardSet, txtP.text.toString(), n)
                         if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
                             card.possible = true // 可能に trueを入れる

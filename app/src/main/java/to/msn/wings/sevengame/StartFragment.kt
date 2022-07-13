@@ -51,6 +51,7 @@ class StartFragment : Fragment() {
     private lateinit var _passBtn : Button
     private lateinit var _aTxt : TextView
     private lateinit var _bTxt : TextView
+
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)
 //
@@ -78,7 +79,6 @@ class StartFragment : Fragment() {
             /* 初回
             */
             // lateinit varフィールドに 初期値を代入
-         //   _cardSet = hashSetOf<String>("S6", "S8", "H6", "H8",  "D6", "D8", "C6", "C8")  // lateinit varフィールドに 初期値を代入
             _possibleCardSet = _game.getPossibleCardData() // lateinit varフィールドに 初期値を代入
             _tableCardData = _game.getStartTableCardData() // lateinit varフィールドに 初期値を代入
             _playersCardData = _game.getPlayersCardData() // lateinit varフィールドに 初期値を代入
@@ -127,6 +127,7 @@ class StartFragment : Fragment() {
             }
 
             // ここから見直し _deepPossibleCardSet  _deepComAList  ディープコピー
+            // _deepPossibleCardSet　ディープコピーしたもの (新たに 別のオブジェクト) ディープコピーにしないとエラー
             val _deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
             val _deepPossibleCardSet = HashSet<PossibleCard>(deepPossibleCardSet)  // ディープコピーすること (同じ参照にしないこと)
             // アダプターと同じ処理を繰り返し書くので、同じメソッドを使いまわせるように Gameクラスにメソッドを定義して使うようにします。Javaでいうstaticなメソッドを作る
@@ -140,129 +141,105 @@ class StartFragment : Fragment() {
                 // nextInt() は 0 から引数に指定した値未満の整数を返します
                 randomIndex = Random.nextInt(subList.size)  // 3つ 出せるのがあったら 0 1 2　とかどれかが返ります　
                 putCard = subList.get(randomIndex)
+                // まずは プレイヤーの持ち手リスト_deepComAList から、出したカードを取り除く
+                // java.util.ConcurrentModificationException を回避するために forは使わないでください
+                val iterator = _deepComAList.iterator()  // 元のコレクションを書き換えます エラーなしで
+                while (iterator.hasNext()){
+                    val item = iterator.next()
+                    if (item.pTag.equals(putCard.tag)) {
+                        iterator.remove()
+                    }
+                }
+                // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                for (item in _tableCardData) {
 
+                    if (item.tag.equals(putCard.tag)) {
+                        item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
+                    }
+                }
+                // さらに、_deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                var itemDistance = 0
+                for (item in _deepPossibleCardSet) {
+                    if (item.tag.equals(putCard.tag)) {
+                        item.placed = true  // 置いた
+                        item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
+                        itemDistance = item.distance  // 6だったら -1 になる
+                    }
+                }
+                // さらに、次に出せるカードの属性を変更する
+                val mark = putCard.tag.substring(0, 1)  // "S" とか
+                val numInt = (putCard.tag).substring(1).toInt()  // 8　とか 6 とか
+                val rangeMore: IntRange = 8..13
+                val rangeLess: IntRange = 1..6
+                val distanceMAX = 6
+                val distanceMIN = -6
+                if (numInt in rangeMore) {  // +1づつ 直近のものから調べる
 
-             //   for (item in subList) {
+                    for ( n in 1..6) {
+                        // メソッドでインスタンスを取得して属性をチェックする  getNPossibleCard N個先のカードを取得する
+                        var card = _game.getNPossibleCard(_deepPossibleCardSet, putCard.tag, n)
+                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+                            card.possible = true // 可能に trueを入れる
+                            break // 抜ける
+                            // ここまでの動きは OKです！！
+                        }
+                        // ループで 直近で  card.placed == falseの物を見つけていきます
+                        if (card != null && card.placed == true && n == distanceMAX) {  // 13まで調べたら
+                            for ( num in 1..6) {  // 数字が 1から6までのカードを調べる
+                                var card = _game.getPossibleCard(
+                                    _deepPossibleCardSet,
+                                    putCard.tag,
+                                    num
+                                ) // 1のカードを取得
 
-//                   for (i in subSet.indices) {  // indicesプロパティは IntRange  インデックスの  ここでは 0..2  です (要素数3つだとしたら)
-//                        if (i == randomIndex) {
-//                            putCard = PossibleCard(
-//                                item.tag,
-//                                item.distance,
-//                                item.placed,
-//                                item.possible
-//                            )
-//                        }
-//                  }
+                                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+                                    card.possible = true // 可能に trueを入れる
+                                    break // 抜ける
+                                }
+                                // また、 +1づつ直近から調べていって  6までみて 6も trueなら何もせずに抜ける
+                            }
+                        }
 
-             //   }
+                    }
+                } else if (numInt in rangeLess) {  // 1..6
+                    // 6 なら itemDistance -1
+                    //    for ( n in distanceMIN downTo itemDistance) { //  -6　~　-1 の間を -1から順に調べたい時 downTo と使うと -1 から始まり逆順に -2 -3 -4 -5 -6 となる
+                    for ( n in -1 downTo -6) {
+                        // n が -1 ならば -1 -2 -3 -4 -5 -6 までループさせる
+                        var card = _game.getNPossibleCard(_deepPossibleCardSet, putCard.tag, n)
+                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+                            card.possible = true // 可能に trueを入れる
+                            break // 抜ける
+                            // ここまでの動きは OKです！！
+                        }
 
-            } else {  // Aは　出せない
+                        if (card != null && card.placed == true && n == distanceMIN) {  // 1まで調べたら n == -6 の時
+                            for ( num in 8 downTo 13) {  // 数字が 13から8までのカードを調べる downTo と使うと 13から始まり逆順に 12 11 10 9 8 とループする
+                                var card = _game.getPossibleCard(
+                                    _deepPossibleCardSet,
+                                    putCard.tag,
+                                    num
+                                ) // 13 のカードを取得
+                                if (card != null && card.placed == false) {  // もし、まだ置いてないカードが見つかった時点で
+                                    card.possible = true  // 可能に trueを入れる
+                                    break  // 抜ける
+                                }
+                                // また、 -1づつ直近から調べていって 8もplacedが trueなら、何もせずにループは終わり
+                            }
+                        }
+                    }
+                }
+                // トースト表示
+                val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_put_on, putCard.tag), Toast.LENGTH_SHORT)
+                toast.show()
 
-            }
+            } else {  // Aは　出せない パスをします！！
+                // パスする パスカウンターを操作 もし、パスが限度を越したら負け、持ち札を全ておく フィールドの操作をする 卓上の属性変更
+                // パスができるなら、パスカウンターだけ操作して、トースト表示　　次にBの作業になる
 
-
-//
-//            if (subSet.size != 0) {  // Aは　出せるので出す
-//                randomIndex = Random.nextInt(subSet.size)  //2だったとすると
-//                for (item in subSet) {
-//                    if ( randomIndex == counter) {
-//                        putStr = item
-//                        break
-//                    }
-//                    counter++
-//                }
-//                // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！ ディープコピーにしないとエラー _cardSet = cardSet としてはいけない バインドが終わるまで cardSetも変わってしまってはいけないからです
-//          //    val _deepCardSet = HashSet<String>(cardSet)  // ディープコピーすること (同じ参照にしないこと)
-//
-//                val mark = putStr.substring(0, 1)  // "D" とか
-//                val numInt = putStr.substring(1).toInt()  // 5　とか
-//                val rangeMore: IntRange = 8..12
-//                val rangeLess: IntRange = 2..6
-//                var strNum = ""
-//                if (numInt in rangeMore) {
-//                    strNum = (numInt + 1).toString()  // String型の "9" "10 "11" "12" "13"
-//                } else if (numInt in rangeLess) {
-//                    strNum = (numInt - 1).toString()  // String型の "5" "4" "3" "2" "1"
-//                } else if (numInt == 13) {  // 13を出したら、1しか置けなくなるから
-//                    strNum = "1"
-//                } else if (numInt == 1) {  // 1を出したら 13しか置けなくなるから
-//                    strNum = "13"
-//                }
-//                val addStr = mark + strNum
-//                _deepPossibleCardSet.add(addStr)  // 追加する
-//
-//                // java.util.ConcurrentModificationException を回避するために forは使わないでください
-//                val ite = _deepPossibleCardSet.iterator()  // _deepCardSet を書き換えます イテレータを使えばエラーなしでできる
-//                while (ite.hasNext()){
-//                    val item = ite.next()
-//                    if (item.equals(putStr)) {
-//                        ite.remove()
-//                    }
-//                }
-//                // ここまでの動きはOKです
-//                // 1 か 13　が出てきた時にチェックしてください！！
-//
-//                if (strNum == "1") {  // まだ動き未確認です
-//                    while (ite.hasNext()){
-//                        val item = ite.next()
-//                        var m = item.substring(0 ,1)
-//                        var i = item.substring(1)
-//                        if (m.equals(mark)) {
-//                            if (i.toInt() >= 8 && i.toInt() <= 13) {
-//                                ite.remove()
-//                            }
-//                        }
-//                    }
-//                }
-//                if (strNum == "13") {  // まだ動き未確認です
-//                    while (ite.hasNext()){
-//                        val item = ite.next()
-//                        var m = item.substring(0, 1)
-//                        var i = item.substring(1)
-//                        if (m.equals(mark)) {
-//                            if (i.toInt() >= 1 && i.toInt() <= 6) {
-//                                ite.remove()
-//                            }
-//                        }
-//                    }
-//                }
-//                // ここで lateinit varフィールドに 初期値を代入する
-//               // _cardSet = HashSet<String>(_deepCardSet)  // ディープコピーすること (同じ参照にしないこと)
-//                // _deepCardSetここまで
-//
-//
-//             //   val _deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
-//
-//                // comA手持ちりすとから putStr と　同じタグのを除いてください
-//                // java.util.ConcurrentModificationException を回避するために forは使わないでください
-//                val iterator = _deepComAList.iterator()  // 元のコレクションを書き換えます エラーなしで
-//                while (iterator.hasNext()){
-//                    val item = iterator.next()
-//                    if (item.pTag.equals(putStr)) {
-//                        iterator.remove()
-//                    }
-//                }
-//                // ここで lateinit varフィールドに 初期値を代入する
-//              //  _comAList = ArrayList<PlayerListItem>(_deepComAList) // ディープコピーすること 同じ参照にしないこと
-//
-//
-//                // 卓上リストを　　trueにして表示されるようにしてください
-//                // 卓上カードのアイテムListItemの属性を変更する placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
-//                for (item in _tableCardData) {  // 要素の属性を操作してるだけだから、元のコレクションがそのまま使える
-//                    if (item.tag.equals(putStr)) {
-//                        item.placed = true
-//                    }
-//                }
-//                // トースト表示
-//                val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_putOn, putStr), Toast.LENGTH_SHORT)
-//                toast.show()
-
-//            } else {   // Aは 出せるもの要素がない パスをします！！
-                // パスする パスカウンターを操作 もし、パスが限度を越したら負け、持ち札を全ておく、また _cardSetを操作する トースト表示
-                // パスができるなら、パスカウンターだけ操作
-//                val intent = Intent(activity, MainActivity::class.java)
-//                if (_comAPassCounter == 0 && _comBPassCounter == 0) { // 終了
+                // もうパスできない
+                val intent = Intent(activity, MainActivity::class.java)
+                //                if (_comAPassCounter == 0 && _comBPassCounter == 0) { // 終了
 //                    // あなたの勝ちですダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
 //                    AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
 //                        .setTitle("あなたの勝ちです")
@@ -298,9 +275,17 @@ class StartFragment : Fragment() {
 //                    // comAはパスしたから パスカウンターだけをマイナスするだけ
 //                }
 //            }
-            ////////　ここまでcomA
-            ////////　ここからcomB
+                ////////　ここまでcomA
+                ////////　ここからcomB
 
+
+
+
+                ////////　ここまでcomB
+
+
+
+            }
 
 
 
