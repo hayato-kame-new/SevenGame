@@ -73,7 +73,7 @@ class PlayerCardListAdapter(
 
         val pId: TextView = holder.itemView.findViewById(R.id.pId)
         val pMark: TextView = holder.itemView.findViewById(R.id.pMark)
-        val pNumber: TextView = holder.itemView.findViewById(R.id.pNumber)
+    //    val pNumber: TextView = holder.itemView.findViewById(R.id.pNumber)
         val pTag: TextView = holder.itemView.findViewById(R.id.pTag)
 
         // バインドするときに もし、markが 1 4 なら 黒にする 2 3 なら 赤にする
@@ -106,9 +106,6 @@ class PlayerCardListAdapter(
         val cardView : CardView = holder.itemView.findViewById(R.id.playerCardView)
 
         // ラムダ式の中は、innerのついた内部クラスなので、外側のクラスのメンバにアクセスできる (innerがついればアクセスできるから)
-//        val context = holder.itemView.context
-//        val intent = Intent(context, MainActivity::class.java)
-
 
         cardView.setOnClickListener {
             val txtViewPTag = it.findViewById<TextView>(R.id.pTag)  // ラムダの中で、クリックしたビューのタグを取得する 変数名に気を付ける
@@ -138,6 +135,7 @@ class PlayerCardListAdapter(
                         iterator.remove()
                     }
                 }
+
                 // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                 for (item in _tableCardData) {
                    // if (item.tag.equals(txtViewPTag.text)) {
@@ -145,8 +143,8 @@ class PlayerCardListAdapter(
                         item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
                     }
                 }
-                // さらに、_deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
 
+                // さらに、_deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                 for (item in _deepPossibleCardSet) {
                     if (item.tag.equals(txtP.text.toString())) {
                         item.placed = true  // 置いた
@@ -156,9 +154,8 @@ class PlayerCardListAdapter(
 
                 // さらに、次に出せるカードの属性を変更する
                 val game = Game()
-             //   val mark = (txtP.text.toString()).substring(0, 1)  // "S" とか
                 val numInt = (txtP.text.toString()).substring(1).toInt()  // 8　とか 6 とか
-                // もし、出したカードが １３だったら、 ループで探して、
+
                 val rangeMore: IntRange = 8..13
                 val rangeLess: IntRange = 1..6
                 var reverse: Boolean = false
@@ -234,9 +231,7 @@ class PlayerCardListAdapter(
                                                 // 条件に合うものは 全て possible false　にしないといけないから breakは書かない
                                             }
                                         }
-
                                     }
-
                                     break  // 抜ける
                                 }
                                 // また、 -1づつ直近から調べていって 8もplacedが trueなら、何もせずにループは終わり
@@ -265,7 +260,6 @@ class PlayerCardListAdapter(
                     }
                 }
 
-
                     // トースト表示
                 val toast: Toast = Toast.makeText(context, context.getString(R.string.put_on, txtP.text.toString()), Toast.LENGTH_SHORT)
                 toast.show()
@@ -282,8 +276,6 @@ class PlayerCardListAdapter(
                 intent.putExtra("comAPassCount", _comAPassCounter)  // そのまま渡すだけ
                 intent.putExtra("comBPassCount", _comBPassCounter)  // そのまま渡すだけ
                 // MainActivityへ遷移します
-               //  it.context
-              //   it.context.startActivity(intent)
                 context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             } else {
                 // クリックしたものは置けないカードだったので トースト表示だけ 遷移しません パスをしたいなら、ボタンを押せるようにしてるから

@@ -32,7 +32,6 @@ import kotlin.random.Random
  */
 class StartFragment : Fragment() {
      // publicにしておく _cardSet は 重複しないSetにする 次に置ける候補のカードを要素としている
-   // lateinit var _cardSet: HashSet<String>
      lateinit var _possibleCardSet: HashSet<PossibleCard>
     // 変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
     private lateinit var _game: Game
@@ -88,7 +87,7 @@ class StartFragment : Fragment() {
             _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"  // 最初 3
             _bTxt.text = "コンピューターBは パス 残り " + _comBPassCounter.toString() + "回"  // 最初 3
             // lateinit varフィールドに 初期値を代入してる
-            //      単純な解決策は、指定された範囲の間に存在する元のリストの要素をサブリストに追加することです。
+            //     エラーなしで サブリスト取得するには、指定された範囲の間に存在する元のリストの要素をサブリストに追加することです。
             // getSubListメソッドの中で MutableListオブジェクトを新しく作って返している MutableListにしないとできない
             _playerList = getSubList(_playersCardData, 0, (_playersCardData.size / 3) - 1 ) as ArrayList<PlayerListItem>
             _comAList = getSubList(_playersCardData, _playersCardData.size / 3 , (_playersCardData.size * 2 / 3) - 1) as ArrayList<PlayerListItem>
@@ -96,26 +95,23 @@ class StartFragment : Fragment() {
 
             sort(_playerList)  // 管理ID順　ソートずみのリスト　をアダプターの引数に渡す  初回表示
 
-
             /* 初回ここまで
             */
         } else {
             /* 遷移してきたとき
             */
-            // lateinit varフィールドに 初期値を代入する  直接入れないで一旦違う変数に入れておいた方がいいかも??
-                val deepPossibleCardSet = intent.getSerializableExtra("set") as HashSet<PossibleCard>
-                val comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
-                val comBList = intent.getStringArrayListExtra("comBList") as ArrayList<PlayerListItem>
-               _playerList = intent.getSerializableExtra("data") as ArrayList<PlayerListItem>
-        
-            _tableCardData = intent.getSerializableExtra("tableCardData") as ArrayList<ListItem>
+            // lateinit varフィールドに 初期値を代入するが、操作してから代入したい時は  直接入れないで一旦違う変数に入れておく 下の３つ
+            val set = intent.getSerializableExtra("set") as HashSet<PossibleCard>
+            val comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
+            val comBList = intent.getStringArrayListExtra("comBList") as ArrayList<PlayerListItem>
 
-        //    _comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
-         //   _comBList = intent.getStringArrayListExtra("comBList") as ArrayList<PlayerListItem>
+            //  lateinit varフィールドに 初期値を代入する
+           _playerList = intent.getSerializableExtra("data") as ArrayList<PlayerListItem>
+            _tableCardData = intent.getSerializableExtra("tableCardData") as ArrayList<ListItem>
             _playerPassCounter = intent.getIntExtra("pPassCount", 0)
             _comAPassCounter = intent.getIntExtra("comAPassCount", 0)
             _comBPassCounter = intent.getIntExtra("comBPassCount", 0)
-
+            //  lateinit varフィールドに 初期値を代入する
             _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"  // 最初 3
             _bTxt.text = "コンピューターBは パス 残り " + _comBPassCounter.toString() + "回"  // 最初 3
             if (_comAPassCounter == 0) {
@@ -127,39 +123,34 @@ class StartFragment : Fragment() {
                 _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
             }
 
-            // ここから見直し _deepPossibleCardSet  _deepComAList  ディープコピー
-            // _deepPossibleCardSet　ディープコピーしたもの (新たに 別のオブジェクト) ディープコピーにしないとエラー
-            val _deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
-            val _deepComBList = ArrayList<PlayerListItem>(comBList) // ディープコピーすること 同じ参照にしないこと
-            val _deepPossibleCardSet = HashSet<PossibleCard>(deepPossibleCardSet)  // ディープコピーすること (同じ参照にしないこと)
-            // アダプターと同じ処理を繰り返し書くので、同じメソッドを使いまわせるように Gameクラスにメソッドを定義して使うようにします。Javaでいうstaticなメソッドを作る
-            // クラス名.メソッド名で呼び出しできるようにします kotlinではstaticメソッドはありません。ただしCompanion Objectsという仕組みを使えば実現できます
-            // まずAから
-            // サブリストを取得する そのリストは後で インデックスで要素を取得したいので、Listにすべきです Setは順番を持たないからです
-            // 置くことのできそうなカードを探してリストにする 複数見つかる時もあるし、空のリストを返す時もある
-            val subListComA = getSubList(deepPossibleCardSet, comAList)  // リストにします
+            // 一旦ローカル変数で取得した3つを  ディープコピーしておく (新たに 別のオブジェクト) ディープコピーしたオブジェクトも ローカル変数にしておく
+            val deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
+            val deepComBList = ArrayList<PlayerListItem>(comBList) // ディープコピーすること 同じ参照にしないこと
+            val deepPossibleCardSet = HashSet<PossibleCard>(set)  // ディープコピーすること (同じ参照にしないこと)
+
+            // comAの手
+            // サブリストを取得する そのリストは後で インデックスで要素を取得したいので、Listにすべきです (Setは順番を持たないからです Setにはしません)
+            // 置くことのできそうなpossibleカードを探してリストにする 複数見つかる時もあるし、空のリストを返す時もある
+            val subListComA = getSubList(set, comAList)  // 戻り値リストにします 引数はintentから取得したもの
             if (subListComA.size != 0) {  // Aは　出せるので出す
                 // まずは プレイヤーの持ち手リスト_deepComAList から、置いたカードを取り除く  戻り値置いたカード
                 var putCard: PossibleCard? = null
-                putCard = removeComPutCard(subListComA, _deepComAList)
+                putCard = removeComPutCard(subListComA, deepComAList)
 
                 // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                 for (item in _tableCardData) {
-
                     if (item.tag.equals(putCard?.tag)) {
                         item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
                     }
                 }
-                // さらに、_deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-               // var itemDistance = 0
-                for (item in _deepPossibleCardSet) {
+                // さらに、deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                for (item in deepPossibleCardSet) {
                     if (item.tag.equals(putCard?.tag)) {
                         item.placed = true  // 置いた
                         item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
-                      //  itemDistance = item.distance  // 6だったら -1 になる
                     }
                 }
-                changeSet(_deepPossibleCardSet, putCard)
+                changeSet(deepPossibleCardSet, putCard)
 
                 // comA トースト表示
                 val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_put_on, putCard!!.tag), Toast.LENGTH_SHORT)
@@ -187,14 +178,41 @@ class StartFragment : Fragment() {
                     val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_lose), Toast.LENGTH_SHORT)
                     toast.show()
                     // comA負けたので手持ちを全て出す _deepComAListを変更空にする　_deepCardSetも変更すること 卓上にも並べること
-                    val sub = arrayListOf(_deepComAList)  // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
-                    // _deepComAListを変更空にする リスト内の全要素を削除
-                    _deepComAList.clear()
-                    // 卓上に並べる  １回１回出すたびにメソッドを呼ぶ？
+                     // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
+                     // ここから確認をすること
+                     val subDeepComAList = getSubList(deepComAList)
+                  //  val subDeepComAList = mutableListOf(deepComAList)  // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
+                    // deepComAListを変更空にする リスト内の全要素を削除
+                    deepComAList.clear()  // 最後にこの空にしたリスト をさらに _comAListにディープコピーをして lateinit varフィールドへ初期値として代入しています
+                    //  comA手持ちを全て出す　卓上に並べる  とりあえず、卓上を placed trueの属性に変えればいい
+                     // ここ書く
+                     // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                     for (item in _tableCardData) {
+                         for (pItem in subDeepComAList!!) {
+                             if (item.tag.equals(pItem.pTag)) {
+                                 item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
+                             }
+                         }
+                     }
+                    // deepPossibleCardSetは 　placed   possibleだけ を属性を書き換える
+                     // 出したカード(subDeepComAListの中身の要素が出したカードです)  の属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                     for (item in deepPossibleCardSet) {
+                         for (pItem in subDeepComAList!!) {
+                             if (item.tag.equals(pItem.pTag)) {
+                                 item.placed = true  // 置いた
+                                 item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
+                             }
+                         }
+                     }
+                     //  changeSetメソッドは呼ばないこと！！
+                     _comAPassCounter--  // ここで -1 になりました コンピューターA はゲームオーバー
+                     if (_comAPassCounter == -1) {
+                         _aTxt.text = "コンピューターAは 負けました "
+                         _aTxt.setTextColor(activity?.resources?.getColor(R.color.white)!!)
+                         _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.black)!!)
+                     }
 
-
-
-                    // _deepCardSetも変更する
+                    // 他にすることはないかな ??
 
 
                 } else {
@@ -213,7 +231,7 @@ class StartFragment : Fragment() {
                 ////////　ここからcomB
 
             // インデックスで要素を取得したいなら、Listにすべきです Setは順番を持たないからです
-            val subListComB = getSubList(deepPossibleCardSet, comBList)  // リストにします
+            val subListComB = getSubList(set, comBList)  // リストにします
             if (subListComB.size != 0) {  // Bは　出せるので出す
 
                 var putCard: PossibleCard? = null  // 出すカード
@@ -224,7 +242,7 @@ class StartFragment : Fragment() {
                 // まずは プレイヤーの持ち手リスト_deepComAList から、出したカードを取り除く
                 // ここからメソッド化すること
                 // java.util.ConcurrentModificationException を回避するために forは使わないでください
-                val iterator = _deepComBList.iterator()  // 元のコレクションを書き換えます エラーなしで
+                val iterator = deepComBList.iterator()  // 元のコレクションを書き換えます エラーなしで
                 while (iterator.hasNext()){
                     val item = iterator.next()
                     if (item.pTag.equals(putCard.tag)) {
@@ -244,13 +262,13 @@ class StartFragment : Fragment() {
 
 
             ////////　ここまでcomB
-            // ここで lateinit varフィールドに 初期値を代入する
-            _possibleCardSet = HashSet<PossibleCard>(_deepPossibleCardSet)  // ディープコピーすること (同じ参照にしないこと)
-            // ここで lateinit varフィールドに 初期値を代入する
-              _comAList = ArrayList<PlayerListItem>(_deepComAList) // ディープコピーすること 同じ参照にしないこと
 
             // ここで lateinit varフィールドに 初期値を代入する
-             _comBList = ArrayList<PlayerListItem>(_deepComBList) // ディープコピーすること 同じ参照にしないこと
+            _possibleCardSet = HashSet<PossibleCard>(deepPossibleCardSet)  // ディープコピーすること (同じ参照にしないこと)
+            // ここで lateinit varフィールドに 初期値を代入する
+              _comAList = ArrayList<PlayerListItem>(deepComAList) // ディープコピーすること 同じ参照にしないこと
+            // ここで lateinit varフィールドに 初期値を代入する
+             _comBList = ArrayList<PlayerListItem>(deepComBList) // ディープコピーすること 同じ参照にしないこと
 
             /* 遷移してきたときここまで
             */
@@ -294,7 +312,6 @@ class StartFragment : Fragment() {
                 // あなたがパスしたから 8つ intent.putExtraして、またMainActivity elseブロックへ戻ってきます
                 intent.putExtra( "data" ,_playerList as ArrayList<PlayerListItem>)
                 intent.putExtra("set", _possibleCardSet as HashSet<PossibleCard>)
-
                 intent.putExtra( "tableCardData" ,_tableCardData as ArrayList<ListItem>)
                  intent.putExtra( "comAList", _comAList as ArrayList<PlayerListItem>)
                  intent.putExtra( "comBList", _comBList as ArrayList<PlayerListItem>)
@@ -345,6 +362,22 @@ class StartFragment : Fragment() {
     }
 
     /**
+     * リストをディープコピーする.新しい別のオブジェクトを生成する(全く同じ内容にする)
+     * 多重定義(オーバーロード) シグネチャが異なれば同名のメソッドで、異なる内容の処理が書ける.
+     * 新しくオブジェクトを作り直して ディープコピーをする MutableListじゃないとだめ
+     */
+    fun <T> getSubList(list: List<T>): List<T>? {
+        val subList: MutableList<T> = ArrayList()  // MutableList
+        for (i in list.indices) { // indicesプロパティで   インデックスの範囲が得られる  0..6　など IntRange
+            subList.add(list[i])
+        }
+        return subList
+    }
+
+
+    /**
+     * 多重定義(オーバーロード) シグネチャが異なれば同名のメソッドで、異なる内容の処理が書ける
+     * リストをディープコピーする.
      * プレイヤーのカードを人数分で分ける.新しくオブジェクトを作り直して ディープコピーをする MutableListじゃないとだめ
      */
         fun <T> getSubList(list: List<T>, start: Int, end: Int): List<T>? {
@@ -379,7 +412,7 @@ class StartFragment : Fragment() {
     /**
      * コンピュータの手の動き カードのセットの属性の変更
      * _deepPossibleCardSetが実引数
-     * コンピュータが負けて 手持ちのカードを卓上に置く時にも、１枚１枚このメソッドを呼びながら、卓上に置いていきます。
+     *
      */
     fun changeSet(set: HashSet<PossibleCard>, putCard: PossibleCard?) {
         val mark = putCard?.tag?.substring(0, 1)  // "S" とか
@@ -418,7 +451,7 @@ class StartFragment : Fragment() {
                                         // 条件に合うものは 全て possible false　にしないといけないから breakは書かない
                                     }
                                 }
-                               // change()
+
                             }
                             break // 抜ける
                         }
@@ -454,7 +487,7 @@ class StartFragment : Fragment() {
                                         // 条件に合うものは 全て possible false　にしないといけないから breakは書かない
                                     }
                                 }
-                              //  change()
+
                             }
                             break  // 抜ける
                         }
