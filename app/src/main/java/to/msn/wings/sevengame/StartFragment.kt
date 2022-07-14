@@ -24,7 +24,6 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 import kotlin.properties.Delegates
 import kotlin.random.Random
-
 /**
  * MainActivity上のフラグメントです
  * Androidでは、アクティビティとフラグメントのクラスでは、引数なしのコンストラクタを強く推奨していますので、コンストラクタは規定通りにすること
@@ -48,6 +47,8 @@ class StartFragment : Fragment() {
     var _comBPassCounter by Delegates.notNull<Int>()
     // private
     private lateinit var _passBtn : Button
+    private lateinit var _a : TextView
+    private lateinit var _b : TextView
     private lateinit var _aTxt : TextView
     private lateinit var _bTxt : TextView
 
@@ -63,11 +64,14 @@ class StartFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_start, container, false)
         // コンピュータA の表示
+        _a = view.findViewById<TextView>(R.id.a)
+        _a.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
         _aTxt = view.findViewById<TextView>(R.id.aTxt)
-        _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
+
         // コンピュータB の表示
+        _b = view.findViewById<TextView>(R.id.b)
+        _b.setBackgroundColor(activity?.resources?.getColor(R.color.comBColor)!!)
         _bTxt = view.findViewById<TextView>(R.id.bTxt)
-        _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comBColor)!!)
 
         val intent = activity?.intent
         val extras = intent?.extras
@@ -84,8 +88,11 @@ class StartFragment : Fragment() {
             _playerPassCounter = 3  // by Delegates.notNull<Int>()フィールドに 初期値を代入
             _comAPassCounter = 3  // by Delegates.notNull<Int>()フィールドに 初期値を代入
             _comBPassCounter = 3  // by Delegates.notNull<Int>()フィールドに 初期値を代入
-            _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"  // 最初 3
-            _bTxt.text = "コンピューターBは パス 残り " + _comBPassCounter.toString() + "回"  // 最初 3
+
+
+            _aTxt.text = " パス 残り " + _comAPassCounter.toString() + "回"  // 最初 3
+            _bTxt.text = " パス 残り " + _comBPassCounter.toString() + "回"  // 最初 3
+
             // lateinit varフィールドに 初期値を代入してる
             //     エラーなしで サブリスト取得するには、指定された範囲の間に存在する元のリストの要素をサブリストに追加することです。
             // getSubListメソッドの中で MutableListオブジェクトを新しく作って返している MutableListにしないとできない
@@ -111,17 +118,10 @@ class StartFragment : Fragment() {
             _playerPassCounter = intent.getIntExtra("pPassCount", 0)
             _comAPassCounter = intent.getIntExtra("comAPassCount", 0)
             _comBPassCounter = intent.getIntExtra("comBPassCount", 0)
-            //  lateinit varフィールドに 初期値を代入する
-            _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"  // 最初 3
-            _bTxt.text = "コンピューターBは パス 残り " + _comBPassCounter.toString() + "回"  // 最初 3
-            if (_comAPassCounter == 0) {
-                _aTxt.text = "コンピューターA パス 残りなし"
-                _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
-            }
-            if (_comBPassCounter == 0) {
-                _bTxt.text = "コンピューターB パス 残りなし"
-                _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
-            }
+
+            // コンピュータの表示
+            comDisplay(_aTxt, _comAPassCounter)
+            comDisplay(_bTxt, _comBPassCounter)
 
             // 一旦ローカル変数で取得した3つを  ディープコピーしておく (新たに 別のオブジェクト) ディープコピーしたオブジェクトも ローカル変数にしておく
             val deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
@@ -162,18 +162,21 @@ class StartFragment : Fragment() {
 
                 // もうパスできない
                 val intent = Intent(activity, MainActivity::class.java)
-                 if (_comAPassCounter == 0 && _comBPassCounter == 0) { // 終了
+                // もし コンピュータA  0  　   コンピュターB -1なら
+               //   if (_comAPassCounter == 0 && _comBPassCounter == 0) { // 終了
+                 if (_comAPassCounter == 0 && _comBPassCounter == -1) { // 終了
                     // あなたの勝ちですダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
                     AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
                         .setTitle("あなたの勝ちです")
                         .setMessage("ゲーム再開する")
                         .setPositiveButton("OK", { dialog, which ->
-                            activity?.startActivity(intent)  // ここで遷移する
+                            activity?.startActivity(intent)  // ここで遷移する  もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
                         })
                         .show()
                     // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
 
-                } else if (_comAPassCounter == 0 && _comBPassCounter != 0) {
+               // } else if (_comAPassCounter == 0 && _comBPassCounter != 0) {
+                 } else if (_comAPassCounter == 0 && _comBPassCounter != -1) {
                     // comAの負けです トースト出す  comA手持ちを全て出す  comBとあなたでゲームは続く
                     val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_lose), Toast.LENGTH_SHORT)
                     toast.show()
@@ -207,24 +210,25 @@ class StartFragment : Fragment() {
                      //  changeSetメソッドは呼ばないこと！！
                      _comAPassCounter--  // ここで -1 になりました コンピューターA はゲームオーバー
                      if (_comAPassCounter == -1) {
-                         _aTxt.text = "コンピューターAは 負けました "
+                         _aTxt.text = " 負けました "
                          _aTxt.setTextColor(activity?.resources?.getColor(R.color.white)!!)
                          _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.black)!!)
                      }
-
-                    // 他にすることはないかな ??
+                    // 他にすることはないかな ??とりあえずOK
 
 
                 } else {
                     // まだゲームは続けられる　 3人とも続いてる
-                    _comAPassCounter--
-                    _aTxt.text = "コンピューターAは パス 残り " + _comAPassCounter.toString() + "回"
-                    _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
+                    _comAPassCounter--  //  comAはパスしたから パスカウンターだけをマイナスするだけ
+                     val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_pass), Toast.LENGTH_SHORT)
+                     toast.show()
+                    _aTxt.text = " パス 残り " + _comAPassCounter.toString() + "回"
+
                     if (_comAPassCounter == 0) {
-                        _aTxt.text = "コンピューターA パス 残りなし"
+                        _aTxt.text = " パス 残りなし"
                         _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
                     }
-                    // comAはパスしたから パスカウンターだけをマイナスするだけ
+
                 }
             }
                 ////////　ここまでcomA
@@ -530,8 +534,8 @@ class StartFragment : Fragment() {
         // nextInt() は 0 から引数に指定した値未満の整数を返します
         randomIndex = Random.nextInt(sublist.size)  // 3つ 出せるのがあったら 0 1 2　とかどれかが返ります　
         putCard = sublist.get(randomIndex)
-        // まずは プレイヤーの持ち手リスト_deepComAList から、出したカードを取り除く
-        // ここからメソッド化すること
+        //  プレイヤーの持ち手リスト_deepComAList から、出したカードを取り除く
+
         // java.util.ConcurrentModificationException を回避するために forは使わないでください
         val iterator = comList.iterator()  // 元のコレクションを書き換えます エラーなしで
         while (iterator.hasNext()){
@@ -543,7 +547,29 @@ class StartFragment : Fragment() {
         return putCard
     }
 
+    /**
+     * コンピューターのパスの残りの表示や負けた時の表示.
+     */
+    fun comDisplay(view: TextView, count: Int) {
+        when(count) {
+            0 -> {
+                view.text = " パス 残りなし"
+                view.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
+            }
+            -1 -> {
+                view.text = " 負けました "
+                view.setTextColor(activity?.resources?.getColor(R.color.white)!!)
+                view.setBackgroundColor(activity?.resources?.getColor(R.color.black)!!)
+            }
+            else -> {
+                view.text = " パス 残り " + count.toString() + "回"
+            }
+        }
+    }
+
+
 
 
 
 }
+

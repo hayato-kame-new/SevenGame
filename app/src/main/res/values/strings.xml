@@ -5,5 +5,6 @@
     <string name="comA_put_on">コンピュターAは %1$s カードを置きました</string>
     <string name="uncontained">そのカードは置けません</string>
     <string name="comA_lose">コンピュターAは 負けました</string>
+    <string name="comA_pass">コンピュターAは パスしました</string>
 
 </resources>
