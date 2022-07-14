@@ -17,17 +17,18 @@ import to.msn.wings.sevengame.rv.ListItem
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
+import kotlin.properties.Delegates
 
 /**
  * コンストラクタの引数を増やしています.
  * コンストラクタの 第2引数以降を追加して データをフラグメントから受け取る. このクラスのプロパティとしてセットされます.
  * intent.putExtra する際に 第二引数が ArrayList<E> である必要があるために、なるべく ArrayList<E>を使うようにします (MutableListではなく)
  * コンストラクタの 型は、将来他の型でも受け取れるように、ポリモーフィズム で　インタフェース型にしてますが、
- * 中身のオブジェクトは MutableList型ではなく ArrayList型にすること もちろん、重複なしが欲しいなら HashSetでOKです <E>のクラスは、Serializableインタフェースを実装してるので putExtraにそのままで渡せる
+ * 中身のオブジェクトは MutableList型ではなく ArrayList型にすること  <E>のクラスは、Serializableインタフェースを実装してることによって putExtraにそのままで渡せる
  */
 class PlayerCardListAdapter(
     private val data: List<PlayerListItem>, // 第一引数はRecyclerViewにバインドするデータです
-    private val possibleCardSet: Set<PossibleCard>,   // 引数の型はインタフェース型でいい
+    private val possibleCardList: List<PossibleCard>,   // 引数の型はインタフェース型でいい
     private val tableCardData: List<ListItem>,  // 引数の型はインタフェース型でいい ポリモーフィズム
     private val comAList : List<PlayerListItem>,
     private val comBList : List<PlayerListItem>,
@@ -42,18 +43,24 @@ class PlayerCardListAdapter(
     // 遅延して コンストラクタの引数で渡ってきたものをフィールド値にセットします
     //  変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
     //  ここでは onCreate()の後に呼ばれる onCreateViewHolderの中で 代入をして初期化しています
-    private lateinit var _deepPossibleCardSet: HashSet<PossibleCard>  // フィールド宣言だけ 　フィールドの型は実装の型にすること
+  //  private lateinit var _deepPossibleCardSet: HashSet<PossibleCard>  // フィールド宣言だけ 　フィールドの型は実装の型にすること
+    private lateinit var _deepPossibleCardList: ArrayList<PossibleCard>  // フィールド宣言だけ 　フィールドの型は実装の型にすること
     private lateinit var _tableCardData: ArrayList<ListItem>  // フィールド宣言だけ フィールドの型は実装の型にすること
     // コンストラクタの val data は　読み取り専用だから これも 違う変数名で新しく フィールドとして宣言します
     private lateinit var _deepDataList: ArrayList<PlayerListItem>  // フィールド宣言だけ　　onCreateViewHolderの中で 代入をして初期化しています フィールドの型は実装の型にすること
     private lateinit var _deepComAList: ArrayList<PlayerListItem> // フィールド宣言だけ フィールドの型は実装の型にすること
     private lateinit var _deepComBList: ArrayList<PlayerListItem> // フィールド宣言だけ フィールドの型は実装の型にすること
 
+
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlayerCardViewHolder {
         val cardView : View = LayoutInflater.from(parent.context).inflate(R.layout.player_list_item, parent, false)
         // ここで lateinit varフィールドへ 初期値をセットします (引数で渡ってきた値を使って)
         // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！ ディープコピーにしないとエラー _cardSet = cardSet としてはいけない バインドが終わるまで cardSetも変わってしまってはいけないからです
-        _deepPossibleCardSet = HashSet<PossibleCard>(possibleCardSet)  // ディープコピーすること (同じ参照にしないこと)
+      //  _deepPossibleCardSet = HashSet<PossibleCard>(possibleCardSet)  // ディープコピーすること (同じ参照にしないこと)
+        _deepPossibleCardList = ArrayList<PossibleCard>(possibleCardList)  // ディープコピーすること (同じ参照にしないこと)
+
+
         // 中身は同じ ArrayListですが、引数で渡ってきた方はインタフェースの型の変数に入れていますので、ダウンキャストするには明示的なキャストが必要です
         // _tableCardData　要素の属性だけを変更するだけだから ディープコピーしなくてもいい 同じ参照のままでいい
         _tableCardData = tableCardData as ArrayList<ListItem>
@@ -73,7 +80,6 @@ class PlayerCardListAdapter(
 
         val pId: TextView = holder.itemView.findViewById(R.id.pId)
         val pMark: TextView = holder.itemView.findViewById(R.id.pMark)
-    //    val pNumber: TextView = holder.itemView.findViewById(R.id.pNumber)
         val pTag: TextView = holder.itemView.findViewById(R.id.pTag)
 
         // バインドするときに もし、markが 1 4 なら 黒にする 2 3 なら 赤にする
@@ -108,15 +114,14 @@ class PlayerCardListAdapter(
         // ラムダ式の中は、innerのついた内部クラスなので、外側のクラスのメンバにアクセスできる (innerがついればアクセスできるから)
 
         cardView.setOnClickListener {
-            val txtViewPTag = it.findViewById<TextView>(R.id.pTag)  // ラムダの中で、クリックしたビューのタグを取得する 変数名に気を付ける
             //   Log.i("ok", txtViewPTag.text.toString() + "です" + it.toString() + "です クラスは" + it.javaClass)
            val context = holder.itemView.context // MainActivity が取得できてる
 
-            val txtP = it.findViewById<TextView>(R.id.pTag)
+            val txtP = it.findViewById<TextView>(R.id.pTag) // ラムダの中で、クリックしたビューのタグを取得する 外の変数名と同じにならないように気を付ける
 
             // まず、属性を見て判断する
             var decision: Boolean = false
-            for (item in _deepPossibleCardSet) {
+            for (item in _deepPossibleCardList) {
                 if (item.tag.equals(txtP.text.toString()) && item.possible == true) {
                     decision = item.possible
                 }
@@ -135,7 +140,8 @@ class PlayerCardListAdapter(
                         iterator.remove()
                     }
                 }
-                // ここで、_deepDataList　の要素数が 0　になったら、あなたの勝ちです！！
+                // ここで、_deepDataList　の要素数が 0　になったら、
+                // あなたの勝ちです！！ ゲーム終了 一番先に 手持ちが 0になった人の勝ちで ゲーム終章
                  // if else追加すること
 
 
@@ -149,120 +155,239 @@ class PlayerCardListAdapter(
                 }
 
                 // さらに、_deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-                for (item in _deepPossibleCardSet) {
+                for (item in _deepPossibleCardList) {
                     if (item.tag.equals(txtP.text.toString())) {
                         item.placed = true  // 置いた
                         item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
                     }
                 }
 
-                // さらに、次に出せるカードの属性を変更する
+                // ここからまだできてない
+
+                // さらに、次に出せるカードの属性を変更する _deepPossibleCardSet
                 val game = Game()
-                val numInt = (txtP.text.toString()).substring(1).toInt()  // 8　とか 6 とか
 
-                val rangeMore: IntRange = 8..13
-                val rangeLess: IntRange = 1..6
-                var reverse: Boolean = false
-                if (numInt in rangeMore && reverse == false) {  // +1づつ 直近のものから調べる numInt 8とか
-                    for ( n in 9..13) {
-                        // メソッドでインスタンスを取得して属性をチェックする
-                        var card = game.getPossibleCard(_deepPossibleCardSet, txtP.text.toString(), n)
-                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-                            card.possible = true // 可能に trueを入れる
-                            break // 抜ける
-                        }
-                        // ループで 直近で  card.placed == falseの物を見つけていきます
-                        if (card != null && card.placed == true && n == 13) {  // 13まで調べても 13もすでに置いてあるならば
-                            for ( num in 1..6) {  // 数字が 1から6までのカードを調べる
-                                var card = game.getPossibleCard(
-                                    _deepPossibleCardSet,
-                                    txtP.text.toString(),
-                                    num
-                                ) // 最初のループの時に　1のカードを取得
+                // 属性を変更させるので forでできるが、とりあえず _deepPossibleCardSetをサブリストにする
+               // _deepPossibleCardSetはやっぱり　最初から リストにしないとArrayListで作り直してください
+                // ８つに分割しますし インデックスでアクセスしたいので
 
-                                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-                                    card.possible = true // 可能に trueを入れる
-                                    //  trueを入れる をしたら、 もし、出したカードが １３だったら、 ループで探して
-                                    if (card.distance == -6) { //  "1" のカードは distance -6 です ここに来るのは "1"のカードはまだ置いてない placed == false だから、
-                                        // 例えば "1" を trueにしたら、もし、 +1 のカード(2)から 6のカードで、まだplaced false 置いてなくて、possibleが trueのものが
-                                        // あったら、それを possible falseに 変更しないといけない
-                                        // 今置いたのが "13"だから、次に置けるのは "1"のカードであって、 +1 のカード(2)から 6のカード ではなくなりますから
-                                        // ただし、ゲームオーバーして、手持ちを卓上に置いている場合もありますので、まず、置いてないことを条件にします
-                                        reverse = true
-                                        for ( n in 2..6) {
-                                            var card = game.getPossibleCard(_deepPossibleCardSet, txtP.text.toString(), n)
-                                            if (card != null && card.placed == false && card.possible == true) { // もし、まだ置いてないカードが見つかった時点で
-                                                card.possible = false // 不可能にする
-                                                // 条件に合うものは 全て possible false　にしないといけないから breakは書かない
-                                            }
-                                        }
 
-                                    }
-                                    break // 抜ける
-                                }
-                                // "1" か既に置かれていたら、 "2" "3" と調べていく placed == false が見つかった時点でそれの possible = true にしています
-                                // また、 +1づつ直近から調べていって  6までみて 6も trueなら何もせずに抜ける
-                            }
-                        }
-                    }
-                    // 9 から 13　のカードまでいったら
 
-                } else if (numInt in rangeLess && reverse == false) {  //  6 とか
-                    for ( n in 5 downTo 1) {
-                        var card = game.getPossibleCard(_deepPossibleCardSet, txtP.text.toString(), n)
-                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-                            card.possible = true // 可能に trueを入れる
-                            break // 抜ける
-                        }
-                        if (card != null && card.placed == true && n == 1) { // 1まで調べても 1もすでに置いてあるならば
-                            for ( num in 13 downTo 8) {  // 数字が 13から8までのカードを調べる downTo と使うと 13から始まり逆順に 12 11 10 9 8 とループする
-                                var card = game.getPossibleCard(
-                                    _deepPossibleCardSet,
-                                    txtP.text.toString(),
-                                    num
-                                ) // 最初のループの時に13 のカードを取得
-                                if (card != null && card.placed == false) {  // もし、まだ置いてないカードが見つかった時点で
-                                    card.possible = true  // 可能に trueを入れる
-                                    if (card.distance == 6) {
-                                        //  trueを入れる をしたら、 もし、出したカードが 1だったら、
-                                        // 例えば "13" を trueにしたら、もし、 -1 のカード(12)から 8のカードで、まだ置いてなくて、possibleが trueのものが
-                                        // あったら、それを possible  falseに 変更しないといけない
-                                        reverse = true
-                                        for ( n in 8..12) {
-                                            var card = game.getPossibleCard(_deepPossibleCardSet, txtP.text.toString(), n)
-                                            if (card != null && card.placed == false && card.possible == true) { // もし、まだ置いてないカードが見つかった時点で
-                                                card.possible = false // 不可能にする
-                                                // 条件に合うものは 全て possible false　にしないといけないから breakは書かない
-                                            }
-                                        }
-                                    }
-                                    break  // 抜ける
-                                }
-                                // また、 -1づつ直近から調べていって 8もplacedが trueなら、何もせずにループは終わり
-                            }
-                        }
-                    }
-                } else if (numInt in rangeLess && reverse == true) {
-                    for ( n in 2..6) {
-                        // メソッドでインスタンスを取得して属性をチェックする
-                        var card = game.getPossibleCard(_deepPossibleCardSet, txtP.text.toString(), n)
-                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-                            card.possible = true // 可能に trueを入れる
-                            break // 抜ける
-                        }
-                        // 6まで回って みんな card.placed == true なら　何もしないで終わり
-                    }
-                } else if (numInt in rangeMore && reverse == true) {
-                    for ( n in 12 downTo 8) {
-                        // メソッドでインスタンスを取得して属性をチェックする
-                        var card = game.getPossibleCard(_deepPossibleCardSet, txtP.text.toString(), n)
-                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-                            card.possible = true // 可能に trueを入れる
-                            break // 抜ける
-                        }
-                        // 8まで回って みんな card.placed == true なら　何もしないで終わり
-                    }
-                }
+
+
+
+
+
+
+//  _deepPossibleCardList
+
+//                if (numInt in rangeMore ) {
+//                    for (n in 9..13) {
+//                        // メソッドでインスタンスを取得して属性をチェックする
+//                        var card =
+//                            game.getPossibleCard(_deepPossibleCardSet, txtP.text.toString(), n)
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる
+//                            break // 抜ける
+//                        }
+//                    }
+//                } else if (numInt == 13) {
+//                    // １つ目のループで 先にクリアしてから
+//                    for ( num in 1..6) {  // 数字が 1から6までのカードを調べる
+//                        var card = game.getPossibleCard(
+//                            _deepPossibleCardSet,
+//                            txtP.text.toString(),
+//                            num
+//                        )
+//                        // 先にクリア
+//                        if (card != null && card.placed == false && card.possible == true) {
+//                            card.possible = false // 1から6までのカード全部　置ける を 一旦 置けない でクリアしておく
+//                        }
+//                    }
+//                    // もう一度別のループで設定し直す
+//                    for ( num in 1..6) {  // 数字が 1から6までのカードを調べる
+//                        var card = game.getPossibleCard(
+//                            _deepPossibleCardSet,
+//                            txtP.text.toString(),
+//                            num
+//                        )
+//                        // 設定し直しする
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる 最初に見つかったやつだけ
+//                            break // 抜ける 最初に見つかったら trueにしたらすぐループを抜ける
+//                        }
+//                    }
+//                } else if (numInt in rangeLess) {
+//                    for (n in 5 downTo 1) {
+//                        // メソッドでインスタンスを取得して属性をチェックする
+//                        var card =
+//                            game.getPossibleCard(_deepPossibleCardSet, txtP.text.toString(), n)
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
+//                            break // 抜ける
+//                        }
+//                    }
+//                } else if (numInt == 1) { // 今置いたカード numInt 1 の時には  上で 置いたになってます item.placed = true
+//
+//                    // １つ目のループで 先にクリアしてから
+//                    for (num in 13 downTo 8) {  // 数字が 13から8までのカードを調べる
+//                        var card = game.getPossibleCard(
+//                            _deepPossibleCardSet,
+//                            txtP.text.toString(),
+//                            num
+//                        )
+//                        // クリアします
+//                        if (card != null && card.placed == false && card.possible == true) {
+//                            card.possible = false // 13から8までのカード全部　置ける を 一旦 置けない でクリアしておく
+//                        }
+//                    }
+//                    // もう一度別のループで設定し直す
+//                    for (num in 13 downTo 8) {  // 数字が 13から8までのカードを調べる
+//                        var card = game.getPossibleCard(
+//                            _deepPossibleCardSet,
+//                            txtP.text.toString(),
+//                            num
+//                        )
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる 最初に見つかったやつだけ
+//                            break // 抜ける 最初に見つかったら trueにしたらすぐループを抜ける
+//                        }
+//                    }
+//
+//                }     // 今置いたカードのマーク
+//             //   val putMark = (txtP.text.toString()).substring(0, 1).toInt()  // "S"
+//                // 今置いたカードの数
+//                val putNumInt = (txtP.text.toString()).substring(1).toInt()  // 8　とか 6 とか
+//
+//                if (putNumInt == 1) {
+//                    // １つ目のループで 先にクリアしてから
+//                    for (num in 13 downTo 8) {  // 数字が 13から8までのカードを調べる
+//                        var card = game.getPossibleCard(
+//                            _deepPossibleCardSet,
+//                            txtP.text.toString(),
+//                            num
+//                        )
+//                        // クリアします
+//                        if (card != null && card.placed == false && card.possible == true) {
+//                            card.possible = false // 13から8までのカード全部　置ける を 一旦 置けない でクリアしておく
+//                        }
+//                    }
+//                    // もう一度別のループで設定し直す
+//                    for (num in 13 downTo 8) {  // 数字が 13から8までのカードを調べる
+//                        var card = game.getPossibleCard(
+//                            _deepPossibleCardSet,
+//                            txtP.text.toString(),
+//                            num
+//                        )
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる 最初に見つかったやつだけ
+//                            break // 抜ける 最初に見つかったら trueにしたらすぐループを抜ける
+//                        }
+//                    }
+//                    // 通常 1を置いた時には 2..6　は　placed == trueになってるから 大丈夫 逆回転の時のためのです
+//                    for (num in 2..6) {
+//                        var card = game.getPossibleCard(
+//                            _deepPossibleCardSet,
+//                            txtP.text.toString(),
+//                            num
+//                        )
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる 最初に見つかったやつだけ
+//                            break // 抜ける 最初に見つかったら trueにしたらすぐループを抜ける
+//                        }
+//                    }
+//                }
+//
+//
+//                if (putNumInt == 13) {
+//                    // １つ目のループで 先にクリアしてから
+//                    for (num in 1..6) {  // 数字が 1から6までのカードを調べる
+//                        var card = game.getPossibleCard(
+//                            _deepPossibleCardSet,
+//                            txtP.text.toString(),
+//                            num
+//                        )
+//                        // 先にクリア
+//                        if (card != null && card.placed == false && card.possible == true) {
+//                            card.possible = false // 1から6までのカード全部　置ける を 一旦 置けない でクリアしておく
+//                        }
+//                    }
+//                    // もう一度別のループで設定し直す
+//                    for (num in 1..6) {  // 数字が 1から6までのカードを調べる
+//                        var card = game.getPossibleCard(
+//                            _deepPossibleCardSet,
+//                            txtP.text.toString(),
+//                            num
+//                        )
+//                        // 設定し直しする
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる 最初に見つかったやつだけ
+//                            break // 抜ける 最初に見つかったら trueにしたらすぐループを抜ける
+//                        }
+//                    }
+//                    // 通常の向きならば 13を置いた時点では 8..12の placedはtrueになってるから大丈夫  逆回転の場合のことです
+//                    for (num in 12 downTo 8) {
+//                        var card = game.getPossibleCard(
+//                            _deepPossibleCardSet,
+//                            txtP.text.toString(),
+//                            num
+//                        )
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる 最初に見つかったやつだけ
+//                            break // 抜ける 最初に見つかったら trueにしたらすぐループを抜ける
+//                        }
+//                    }
+//                }
+//
+//
+//                if (putNumInt >= 2 && putNumInt <= 6) {
+//                    for (num in 5 downTo 1) {
+//                        // メソッドでインスタンスを取得して属性をチェックする
+//                        var card =
+//                            game.getPossibleCard(_deepPossibleCardSet, txtP.text.toString(), num)
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
+//                            break // 抜ける
+//                        }
+//                    }
+////                    for (num in 3..6) {  // 通常の向きならば
+////                        // メソッドでインスタンスを取得して属性をチェックする
+////                        var card =
+////                            game.getPossibleCard(_deepPossibleCardSet, txtP.text.toString(), num)
+////                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+////                            card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
+////                            break // 抜ける
+////                        }
+////                    }
+//                }
+//
+//
+//
+//                if (putNumInt >= 8 && putNumInt <= 12) {
+//                    for (n in (putNumInt + 1)..13) {
+//                        // メソッドでインスタンスを取得して属性をチェックする
+//                        var card =
+//                            game.getPossibleCard(_deepPossibleCardSet, txtP.text.toString(), n)
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
+//                            break // 抜ける
+//                        }
+//                    }
+//                    //
+//                    for (n in 1 downTo 6) {
+//                        var card =
+//                            game.getPossibleCard(_deepPossibleCardSet, txtP.text.toString(), n)
+//                        // 逆むきなら全て 1 - 6は　placed true
+//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+//                            card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
+//                            break // 抜ける
+//                        }
+//                }
+
+
+
+
+
 
                     // トースト表示
                 val toast: Toast = Toast.makeText(context, context.getString(R.string.put_on, txtP.text.toString()), Toast.LENGTH_SHORT)
@@ -271,7 +396,7 @@ class PlayerCardListAdapter(
                // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
                 intent.putExtra("data", _deepDataList as ArrayList<PlayerListItem> )
                 //  自作したクラス PossibleCardを intentで送るためには Serializableインタフェースを実装します
-                intent.putExtra("set", _deepPossibleCardSet as HashSet<PossibleCard>)
+                intent.putExtra("poList", _deepPossibleCardList as ArrayList<PossibleCard>)
                 // 注意点 ListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要があります
                 intent.putExtra("tableCardData", _tableCardData as ArrayList<ListItem>)
                 intent.putExtra("comAList", _deepComAList as ArrayList<PlayerListItem>)
