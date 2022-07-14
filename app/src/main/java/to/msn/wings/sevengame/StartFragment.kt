@@ -447,7 +447,7 @@ class StartFragment : Fragment() {
      *
      */
     fun changeSet(set: HashSet<PossibleCard>, putCard: PossibleCard?) {
-        val mark = putCard?.tag?.substring(0, 1)  // "S" とか
+
         val numInt = (putCard?.tag)?.substring(1)?.toInt()  // 8　とか 6 とか
         val rangeMore: IntRange = 8..13
         val rangeLess: IntRange = 1..6
@@ -467,7 +467,7 @@ class StartFragment : Fragment() {
                             set, // _deepPossibleCardSetが実引数
                             putCard!!.tag,
                             num
-                        ) // 1のカードを取得
+                        ) // 最初のループの時に　1のカードを取得
                         if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
                             card.possible = true // 可能に trueを入れる
                             if (card.distance == -6) { //  "1" のカードは distance -6 です ここに来るのは "1"のカードはまだ置いてない placed == false だから、
