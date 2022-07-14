@@ -135,6 +135,8 @@ class PlayerCardListAdapter(
                         iterator.remove()
                     }
                 }
+                // ここで、_deepDataList　の要素数が 0　になったら、あなたの勝ちです！！
+
 
                 // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                 for (item in _tableCardData) {

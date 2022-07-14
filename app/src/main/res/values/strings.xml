@@ -3,8 +3,10 @@
     uncontained
     <string name="put_on">あなたは %1$s カードを置きました</string>
     <string name="comA_put_on">コンピュターAは %1$s カードを置きました</string>
+    <string name="comB_put_on">コンピュターBは %1$s カードを置きました</string>
     <string name="uncontained">そのカードは置けません</string>
     <string name="comA_lose">コンピュターAは 負けました</string>
+    <string name="comB_lose">コンピュターBは 負けました</string>
     <string name="comA_pass">コンピュターAは パスしました</string>
-
+    <string name="comB_pass">コンピュターBは パスしました</string>
 </resources>
