@@ -1,5 +1,6 @@
 package to.msn.wings.sevengame.playerrv
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
 import android.view.LayoutInflater
@@ -134,55 +135,112 @@ class PlayerCardListAdapter(
                     }
                 }
                 // ここで、_deepDataList　の要素数が 0　になったら、
-                // あなたの勝ちです！！ ゲーム終了 一番先に 手持ちが 0になった人の勝ちで ゲーム終章
-                 // if else追加すること
+                // あなたの勝ちです！！ ゲーム終了 一番先に 手持ちが 0になった人の勝ちで ゲーム終了
+                if (_deepDataList.size == 0) {
+                    // あなたの勝ちです！！ ダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
+                    AlertDialog.Builder(context) // FragmentではActivityを取得して生成  Adapter onBindViewHolder では holder.itemView.context
+                        .setTitle("あなたの勝ちです")
+                        .setMessage("ゲーム再開する")
+                        .setPositiveButton("OK", { dialog, which ->
+                            context.startActivity(intent)
+                        })
+                        .show()
+                    // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
+                } else {
 
-
-                // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-                for (item in _tableCardData) {
-                   if (item.tag.equals(txtP.text)) {
-                        item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
+                    // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                    for (item in _tableCardData) {
+                        if (item.tag.equals(txtP.text)) {
+                            item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
+                        }
                     }
-                }
 
-                // さらに、　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-                for (item in _deepPossibleCardList) {
-                    if (item.tag.equals(txtP.text.toString())) {
-                        item.placed = true  // 置いた
-                        item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
+                    // さらに、　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                    for (item in _deepPossibleCardList) {
+                        if (item.tag.equals(txtP.text.toString())) {
+                            item.placed = true  // 置いた
+                            item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
+                        }
                     }
-                }
-                // 次に出せるカードの変更
-                val pTagStr: String = txtP.text.toString()  // 置いたカードのタグの文字列 "S6" とか
-                val putNum: Int = pTagStr.substring(1).toInt()
-                val game =  Game()
-                // さらに、次に出せるカードの属性を変更する
-                val judge = Judgement(_deepPossibleCardList)
-                if (putNum in 1..6) {
-                    val list = judge.methodSmall(pTagStr)  // 属性を書き換えた リストを返すので、
-                    _deepPossibleCardList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
-                } else if (putNum in 8..13) {
-                    val list = judge.methodBig(pTagStr)  // 属性を書き換えた リストを返すので、
-                    _deepPossibleCardList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
-                }
+                    // 次に出せるカードの変更
+                    val pTagStr: String = txtP.text.toString()  // 置いたカードのタグの文字列 "S6" とか
+                    val putNum: Int = pTagStr.substring(1).toInt()
+                    val game =  Game()
+                    // さらに、次に出せるカードの属性を変更する
+                    val judge = Judgement(_deepPossibleCardList)
+                    if (putNum in 1..6) {
+                        val list = judge.methodSmall(pTagStr)  // 属性を書き換えた リストを返すので、
+                        _deepPossibleCardList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
+                    } else if (putNum in 8..13) {
+                        val list = judge.methodBig(pTagStr)  // 属性を書き換えた リストを返すので、
+                        _deepPossibleCardList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
+                    }
 
                     // トースト表示
-                val toast: Toast = Toast.makeText(context, context.getString(R.string.put_on, txtP.text.toString()), Toast.LENGTH_SHORT)
-                toast.show()
-                  // 注意点 putExtraは リストの時には ArrayList型でないとだめ
-               // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
-                intent.putExtra("data", _deepDataList as ArrayList<PlayerListItem> )
-                //  自作したクラス PossibleCardを intentで送るためには Serializableインタフェースを実装します
-                intent.putExtra("poList", _deepPossibleCardList as ArrayList<PossibleCard>)
-                // 注意点 ListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要があります
-                intent.putExtra("tableCardData", _tableCardData as ArrayList<ListItem>)
-                intent.putExtra("comAList", _deepComAList as ArrayList<PlayerListItem>)
-                intent.putExtra("comBList", _deepComBList as ArrayList<PlayerListItem>)
-                intent.putExtra("pPassCount", _playerPassCounter)  // そのまま渡すだけ
-                intent.putExtra("comAPassCount", _comAPassCounter)  // そのまま渡すだけ
-                intent.putExtra("comBPassCount", _comBPassCounter)  // そのまま渡すだけ
-                // MainActivityへ遷移します
-                context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
+                    val toast: Toast = Toast.makeText(context, context.getString(R.string.put_on, txtP.text.toString()), Toast.LENGTH_SHORT)
+                    toast.show()
+                    // 注意点 putExtraは リストの時には ArrayList型でないとだめ
+                    // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
+                    intent.putExtra("data", _deepDataList as ArrayList<PlayerListItem> )
+                    //  自作したクラス PossibleCardを intentで送るためには Serializableインタフェースを実装します
+                    intent.putExtra("poList", _deepPossibleCardList as ArrayList<PossibleCard>)
+                    // 注意点 ListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要があります
+                    intent.putExtra("tableCardData", _tableCardData as ArrayList<ListItem>)
+                    intent.putExtra("comAList", _deepComAList as ArrayList<PlayerListItem>)
+                    intent.putExtra("comBList", _deepComBList as ArrayList<PlayerListItem>)
+                    intent.putExtra("pPassCount", _playerPassCounter)  // そのまま渡すだけ
+                    intent.putExtra("comAPassCount", _comAPassCounter)  // そのまま渡すだけ
+                    intent.putExtra("comBPassCount", _comBPassCounter)  // そのまま渡すだけ
+                    // MainActivityへ遷移します
+                    context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
+
+                }
+
+//                // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+//                for (item in _tableCardData) {
+//                   if (item.tag.equals(txtP.text)) {
+//                        item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
+//                    }
+//                }
+//
+//                // さらに、　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+//                for (item in _deepPossibleCardList) {
+//                    if (item.tag.equals(txtP.text.toString())) {
+//                        item.placed = true  // 置いた
+//                        item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
+//                    }
+//                }
+//                // 次に出せるカードの変更
+//                val pTagStr: String = txtP.text.toString()  // 置いたカードのタグの文字列 "S6" とか
+//                val putNum: Int = pTagStr.substring(1).toInt()
+//                val game =  Game()
+//                // さらに、次に出せるカードの属性を変更する
+//                val judge = Judgement(_deepPossibleCardList)
+//                if (putNum in 1..6) {
+//                    val list = judge.methodSmall(pTagStr)  // 属性を書き換えた リストを返すので、
+//                    _deepPossibleCardList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
+//                } else if (putNum in 8..13) {
+//                    val list = judge.methodBig(pTagStr)  // 属性を書き換えた リストを返すので、
+//                    _deepPossibleCardList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
+//                }
+//
+//                    // トースト表示
+//                val toast: Toast = Toast.makeText(context, context.getString(R.string.put_on, txtP.text.toString()), Toast.LENGTH_SHORT)
+//                toast.show()
+//                  // 注意点 putExtraは リストの時には ArrayList型でないとだめ
+//               // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
+//                intent.putExtra("data", _deepDataList as ArrayList<PlayerListItem> )
+//                //  自作したクラス PossibleCardを intentで送るためには Serializableインタフェースを実装します
+//                intent.putExtra("poList", _deepPossibleCardList as ArrayList<PossibleCard>)
+//                // 注意点 ListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要があります
+//                intent.putExtra("tableCardData", _tableCardData as ArrayList<ListItem>)
+//                intent.putExtra("comAList", _deepComAList as ArrayList<PlayerListItem>)
+//                intent.putExtra("comBList", _deepComBList as ArrayList<PlayerListItem>)
+//                intent.putExtra("pPassCount", _playerPassCounter)  // そのまま渡すだけ
+//                intent.putExtra("comAPassCount", _comAPassCounter)  // そのまま渡すだけ
+//                intent.putExtra("comBPassCount", _comBPassCounter)  // そのまま渡すだけ
+//                // MainActivityへ遷移します
+//                context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             } else {
                 // クリックしたものは置けないカードだったので トースト表示だけ 遷移しません パスをしたいなら、ボタンを押せるようにしてるから
                 val toast: Toast = Toast.makeText(context, context.getString(R.string.uncontained), Toast.LENGTH_SHORT)
