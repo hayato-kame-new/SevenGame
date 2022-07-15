@@ -116,7 +116,7 @@ class PlayerCardListAdapter(
         cardView.setOnClickListener {
             //   Log.i("ok", txtViewPTag.text.toString() + "です" + it.toString() + "です クラスは" + it.javaClass)
            val context = holder.itemView.context // MainActivity が取得できてる
-
+            // 変数名内部クラスの外と衝突しないように気を付けること
             val txtP = it.findViewById<TextView>(R.id.pTag) // ラムダの中で、クリックしたビューのタグを取得する 外の変数名と同じにならないように気を付ける
 
             // まず、属性を見て判断する
@@ -167,12 +167,66 @@ class PlayerCardListAdapter(
                 // さらに、次に出せるカードの属性を変更する _deepPossibleCardSet
                 val game = Game()
 
-                // 属性を変更させるので forでできるが、とりあえず _deepPossibleCardSetをサブリストにする
-               // _deepPossibleCardSetはやっぱり　最初から リストにしないとArrayListで作り直してください
-                // ８つに分割しますし インデックスでアクセスしたいので
+                val pTagStr: String = txtP.text.toString()  // 置いたカードのタグの文字列 "S6" とか
+                val putCardMark: String = pTagStr.substring(0, 1) // "S" とか
+                val putCardNum: Int = pTagStr.substring(1).toInt()  // 6 とか
 
 
+                // _deepPossibleCardSetの属性を変更させるので forでできるが、とりあえず _deepPossibleCardSetをサブリストにする
+                // _deepPossibleCardListを 8分割する  元のコレクションに影響与えないで作っています
+                // "S1" から "S6"
+                val subSSmall = game.getSubList(_deepPossibleCardList, 0, (_deepPossibleCardList.size / 8) - 1 ) as ArrayList<PossibleCard>
+                // 7のカードは含めないで作る "S8" から "S13"
+                val subSBig = game.getSubList(_deepPossibleCardList, (_deepPossibleCardList.size / 8) + 1, (_deepPossibleCardList.size * 2 / 8) - 1 ) as ArrayList<PossibleCard>
 
+                // "H1" から "H6"
+                val subHSmall = game.getSubList(_deepPossibleCardList, _deepPossibleCardList.size * 2 / 8, (_deepPossibleCardList.size * 3 / 8) - 1 ) as ArrayList<PossibleCard>
+                // 7のカードは含めないで作る "H8" から "H13"
+                val subHBig = game.getSubList(_deepPossibleCardList, (_deepPossibleCardList.size * 3 / 8) + 1, (_deepPossibleCardList.size * 4 / 8) - 1 ) as ArrayList<PossibleCard>
+
+                // "D1" から "D6"
+                val subDSmall = game.getSubList(_deepPossibleCardList, _deepPossibleCardList.size * 4 / 8, (_deepPossibleCardList.size * 5 / 8) - 1 ) as ArrayList<PossibleCard>
+                // 7のカードは含めないで作る "D8" から "D13"
+                val subDBig = game.getSubList(_deepPossibleCardList, (_deepPossibleCardList.size * 5 / 8) + 1, (_deepPossibleCardList.size * 6 / 8) - 1 ) as ArrayList<PossibleCard>
+
+                // "C1" から "C2"
+                val subCSmall = game.getSubList(_deepPossibleCardList, _deepPossibleCardList.size * 6 / 8, (_deepPossibleCardList.size * 7 / 8) - 1 ) as ArrayList<PossibleCard>
+                // 7のカードは含めないで作る "C8" から "C13"
+                val subCBig = game.getSubList(_deepPossibleCardList, (_deepPossibleCardList.size * 7 / 8) + 1, _deepPossibleCardList.size - 1 ) as ArrayList<PossibleCard>
+
+               if (putCardMark.equals("S") && (putCardNum >= 1 && putCardNum <= 6)) {
+                   for (num in 5 downTo 1) {
+                        // メソッドでインスタンスを取得して属性をチェックする
+                        var card =
+                            game.getPossibleCard(subSSmall, pTagStr, num)  // サブリストから取得してくる
+                        if (card != null && card.placed == false) { // もし、5から１まで　サブリストに まだ置いてないカードが見つかった時点で
+                            card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
+                            break // 抜ける
+                        }
+                       // 1を置いた時に もし、普通の向きならばこれで判定できるので
+                       if (card != null && card.placed == true) {   // 普通の向きで 1まで並べた時には   5 4 3 2 1 は既に placed == trueであるので これで順番は普通の向きだと断定できる
+                           // 13から置くように変更する
+                           for (num in 13 downTo 8) {
+                               var card =
+                                   game.getPossibleCard(subSBig, pTagStr, num)  // 13から順にサブリストから取得してくる
+                               // 余計な possibleをクリアする
+                                if (card != null && card.placed == false && card.possible == true) {
+                                    card.possible = false //全部　置ける を 一旦 置けない でクリアしておく 全部だから breakはしない
+                                }
+                           }
+                           // もう一度別のループで設定し直す
+                           for ( num in 13 downTo 8) {
+                               var card = game.getPossibleCard(subSBig, pTagStr, num)  // 13から順にサブリストから取得してくる
+                               // 設定し直しする
+                               if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
+                                   card.possible = true // 可能に trueを入れる 最初に見つかったやつだけ
+                                   break // 抜ける 最初に見つかったら trueにしたらすぐループを抜ける
+                               }
+                           }
+                       }
+                    }
+
+               }
 
 
 

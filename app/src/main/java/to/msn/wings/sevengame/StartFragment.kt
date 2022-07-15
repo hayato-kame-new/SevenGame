@@ -83,7 +83,6 @@ class StartFragment : Fragment() {
             /* 初回
             */
             // lateinit varフィールドに 初期値を代入
-         //   _possibleCardSet = _game.getPossibleCardData() // lateinit varフィールドに 初期値を代入
             _possibleCardList = _game.getPossibleCardData() // lateinit varフィールドに 初期値を代入
             _tableCardData = _game.getStartTableCardData() // lateinit varフィールドに 初期値を代入
             _playersCardData = _game.getPlayersCardData() // lateinit varフィールドに 初期値を代入
@@ -98,9 +97,9 @@ class StartFragment : Fragment() {
             // lateinit varフィールドに 初期値を代入してる
             //     エラーなしで サブリスト取得するには、指定された範囲の間に存在する元のリストの要素をサブリストに追加することです。
             // getSubListメソッドの中で MutableListオブジェクトを新しく作って返している MutableListにしないとできない
-            _playerList = getSubList(_playersCardData, 0, (_playersCardData.size / 3) - 1 ) as ArrayList<PlayerListItem>
-            _comAList = getSubList(_playersCardData, _playersCardData.size / 3 , (_playersCardData.size * 2 / 3) - 1) as ArrayList<PlayerListItem>
-            _comBList = getSubList(_playersCardData, _playersCardData.size * 2 / 3, _playersCardData.size - 1) as ArrayList<PlayerListItem>
+            _playerList = _game.getSubList(_playersCardData, 0, (_playersCardData.size / 3) - 1 ) as ArrayList<PlayerListItem>
+            _comAList = _game.getSubList(_playersCardData, _playersCardData.size / 3 , (_playersCardData.size * 2 / 3) - 1) as ArrayList<PlayerListItem>
+            _comBList = _game.getSubList(_playersCardData, _playersCardData.size * 2 / 3, _playersCardData.size - 1) as ArrayList<PlayerListItem>
 
             sort(_playerList)  // 管理ID順　ソートずみのリスト　をアダプターの引数に渡す  初回表示
 
@@ -435,13 +434,13 @@ class StartFragment : Fragment() {
      * リストをディープコピーする.
      * プレイヤーのカードを人数分で分ける.新しくオブジェクトを作り直して ディープコピーをする MutableListじゃないとだめ
      */
-        fun <T> getSubList(list: List<T>, start: Int, end: Int): List<T>? {
-        val subList: MutableList<T> = ArrayList()  // MutableList
-        for (i in start..end) {
-            subList.add(list[i])
-        }
-        return subList
-        }
+//        fun <T> getSubList(list: List<T>, start: Int, end: Int): List<T>? {
+//        val subList: MutableList<T> = ArrayList()  // MutableList
+//        for (i in start..end) {
+//            subList.add(list[i])
+//        }
+//        return subList
+//        }
 
 
     /**

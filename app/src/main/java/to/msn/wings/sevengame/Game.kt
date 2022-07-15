@@ -193,6 +193,11 @@ class Game {
         return arrayList
     }
 
+    // 8分割する
+    fun divideList( list: ArrayList<PossibleCard>) {
+
+    }
+
 
 //    fun getPossibleCardData(): HashSet<PossibleCard> {
 //        // まず空の HashSetオブジェクトを生成して
@@ -276,23 +281,37 @@ class Game {
 //        return possibleCard
 //    }
 
+    /**
+     * 多重定義(オーバーロード) シグネチャが異なれば同名のメソッドで、異なる内容の処理が書ける.インスタンスメソッド
+     * リストをディープコピーする.
+     * プレイヤーのカードを人数分で分ける.新しくオブジェクトを作り直して ディープコピーをする MutableListじゃないとだめ
+     */
+    fun <T> getSubList(list: List<T>, start: Int, end: Int): List<T>? {
+        val subList: MutableList<T> = ArrayList()  // MutableList
+        for (i in start..end) {
+            subList.add(list[i])
+        }
+        return subList
+    }
+
+
 
     /**
      * 引数のタグと同じマークで、引数num が指定の数 となるカードを取得する
      */
-    fun getPossibleCard(set: Set<PossibleCard>, tag: String, num: Int): PossibleCard? {
-
-        var mark: String = tag.substring(0,1)  // "S"とか
-
-        var newTagstr: String = mark + num.toString()
-
-        var possibleCard: PossibleCard? = null
-        for (item in set) {
-            if(item.tag.equals(newTagstr)) {
-                possibleCard = item
-            }
-        }
-        return possibleCard
-    }
+//    fun getPossibleCard(set: Set<PossibleCard>, tag: String, num: Int): PossibleCard? {
+//
+//        var mark: String = tag.substring(0,1)  // "S"とか
+//
+//        var newTagstr: String = mark + num.toString()
+//
+//        var possibleCard: PossibleCard? = null
+//        for (item in set) {
+//            if(item.tag.equals(newTagstr)) {
+//                possibleCard = item
+//            }
+//        }
+//        return possibleCard
+//    }
 
 }
