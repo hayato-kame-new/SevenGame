@@ -193,93 +193,24 @@ class Game {
         return arrayList
     }
 
-    // 8分割する
-    fun divideList( list: ArrayList<PossibleCard>) {
-
-    }
-
-
-//    fun getPossibleCardData(): HashSet<PossibleCard> {
-//        // まず空の HashSetオブジェクトを生成して
-//        val hashSet = hashSetOf<PossibleCard>()
-//        var possibleCard: PossibleCard? = null
-//        var str: String = ""
-//
-//        for (i in _markList.indices) { //  スペード ハート　ダイヤ　クローバーの順に作成する  indicesプロパティで 0..3 と同じになる  i in 0..3  と同じこと
-//            for (j in 1..13) {  //   1　から 13
-//                if (j == 7) {  // ７のカードだけは true:テーブルに置いてある　で作る
-//                    str = _tagList.get(i) + (j).toString()
-//                    possibleCard = PossibleCard(
-//                        str,  // "S7"  "H7"  "D7"  "C7"
-//                        _distanceList[j]!!,  //  0     7のカードを 起点   通常のgetも存在しますが、putと同様にindexing operatorの使用が推奨されています。
-//                        true,  // もうテーブルには置いている
-//                        false  // 次に置ける可能性のあるカードではありません (もうすでに置かれてるから)
-//                    )
-//                    hashSet.add(possibleCard)
-//                } else if (j == 6) { //  6 のカード
-//                    str = _tagList.get(i) + (j).toString()
-//                    possibleCard = PossibleCard(
-//                        str,  // "S6"  "H6"  "D6"  "C6"
-//                        _distanceList[j]!!,  //   -1     7のカードを 起点
-//                        false,  // まだテーブルには置いてない
-//                        true  //  次に置ける可能性あり!!
-//                    )
-//                    hashSet.add(possibleCard)
-//                } else if (j == 8) { //  8 のカード
-//                    str = _tagList.get(i) + (j).toString()
-//                    possibleCard = PossibleCard(
-//                        str,   // "S8"  "H8"  "D8"  "C8"
-//                        _distanceList[j]!!,  //   1      7のカードを起点
-//                        false,  // まだテーブルには置いてない
-//                        true  // 次に置ける可能性あり!!
-//                    )
-//                    hashSet.add(possibleCard)
-//                } else if (j <= 5) {  // 1 2 3 4 5 のカード は false
-//                //    var distance: Int = j - 7 //  距離は -6 -5 -4 -3 -2  (7のカードを起点 0)
-//                    str = _tagList.get(i) + (j).toString()
-//                    possibleCard = PossibleCard(
-//                        str,
-//                        _distanceList[j]!!,
-//                    //    distance, //   -6 -5 -4 -3 -2
-//                        false,  // まだテーブルには置いてない
-//                        false  // 次に置ける可能性無し
-//                    )
-//                    hashSet.add(possibleCard)
-//                } else if (j >= 9) { //  9 10 11 12 13 のカードは false  距離は  2 3 4 5 6 (7のカードを起点 0)
-//                 //   var distance: Int = j - 7  // 距離は  2 3 4 5 6 (7のカードを起点 0)
-//                    str = _tagList.get(i) + (j).toString()
-//                    possibleCard = PossibleCard(
-//                        str,
-//                        _distanceList[j]!!,
-//                  //      distance, //       2 3 4 5 6
-//                        false,  // まだテーブルには置いてない
-//                        false  // 次に置ける可能性無し
-//                    )
-//                    hashSet.add(possibleCard)
-//                }
-//            }
-//        }
-//        return hashSet
-//    }
-
-
     /**
-     * n だけ先のオブジェクト取得. n は負の数の時もある.
-     * 置いたカードの数が 8以上だとnは正の数　  6以下だと nは負の数
+     * オーバーロード(多重定義)
+     * インデックで要素を取得したいなら、戻り値は Listにすべきです Setは順番を持たないからです
+     * HashSet<PossibleCard>　の中から 同じタグで かつ possible属性が true の PossibleCardオブジェクトを取得
+     * 置くことのできそうなカードを探してリストにする 複数見つかる時もあるし、空のリストを返す時もある
+     * 戻り値 ArrayList<PossibleCard>型です
      */
-//    fun getNPossibleCard(set: Set<PossibleCard>, tag: String, n: Int): PossibleCard? {
-//
-//        var mark: String = tag.substring(0,1)  // "S"とか
-//        var numInt: Int = tag.substring(1).toInt()  // 8以上だとnは正の数　  6以下だと nは負の数
-//        var newTagstr: String = mark + (numInt + n).toString() // ８だと ９になり  6だと ５になる
-//        var possibleCard: PossibleCard? = null
-//        for (item in set) {
-//            if(item.tag.equals(newTagstr)) {
-//                possibleCard = item
-//            }
-//        }
-//        return possibleCard
-//    }
+    fun getSubList(poList: ArrayList<PossibleCard>, comList: ArrayList<PlayerListItem>): ArrayList<PossibleCard> {
+        val arrayList: ArrayList<PossibleCard> = ArrayList()
+        for (possibleCard in poList) {
+            for (item in comList) {
+                if (possibleCard.tag.equals(item.pTag) && possibleCard.possible == true) {
+                    arrayList.add(possibleCard)
+                }
+            }
+        }
+        return arrayList
+    }
 
     /**
      * 多重定義(オーバーロード) シグネチャが異なれば同名のメソッドで、異なる内容の処理が書ける.インスタンスメソッド
@@ -293,25 +224,37 @@ class Game {
         }
         return subList
     }
+    /**
+     * リストをディープコピーする.新しい別のオブジェクトを生成する(全く同じ内容にする).インスタンスメソッド
+     * 多重定義(オーバーロード) シグネチャが異なれば同名のメソッドで、異なる内容の処理が書ける.
+     * 新しくオブジェクトを作り直して ディープコピーをする MutableListじゃないとだめ
+     */
+    fun <T> getSubList(list: List<T>): List<T>? {
+        val subList: MutableList<T> = ArrayList()  // MutableList
+        for (i in list.indices) { // indicesプロパティで   インデックスの範囲が得られる  0..6　など IntRange
+            subList.add(list[i])
+        }
+        return subList
+    }
 
 
 
     /**
      * 引数のタグと同じマークで、引数num が指定の数 となるカードを取得する
      */
-//    fun getPossibleCard(set: Set<PossibleCard>, tag: String, num: Int): PossibleCard? {
-//
-//        var mark: String = tag.substring(0,1)  // "S"とか
-//
-//        var newTagstr: String = mark + num.toString()
-//
-//        var possibleCard: PossibleCard? = null
-//        for (item in set) {
-//            if(item.tag.equals(newTagstr)) {
-//                possibleCard = item
-//            }
-//        }
-//        return possibleCard
-//    }
+    fun getPossibleCard(list: ArrayList<PossibleCard>, tag: String, num: Int): PossibleCard? {
+
+        var mark: String = tag.substring(0,1)  // "S"とか
+
+        var newTagstr: String = mark + num.toString()
+
+        var possibleCard: PossibleCard? = null
+        for (item in list) {
+            if(item.tag.equals(newTagstr)) {
+                possibleCard = item
+            }
+        }
+        return possibleCard
+    }
 
 }

@@ -31,7 +31,6 @@ import kotlin.random.Random
  */
 class StartFragment : Fragment() {
      // publicにしておく 次に置ける候補のカードを要素としている
-  //   lateinit var _possibleCardSet: HashSet<PossibleCard>
     lateinit var _possibleCardList: ArrayList<PossibleCard>  // indexでアクセスするには リストにすべき Setは順番を持たないためできない
     // 変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
     private lateinit var _game: Game
@@ -57,7 +56,6 @@ class StartFragment : Fragment() {
 //        super.onCreate(savedInstanceState)
 //
 //    }
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -109,7 +107,6 @@ class StartFragment : Fragment() {
             /* 遷移してきたとき
             */
             // lateinit varフィールドに 初期値を代入するが、操作してから代入したい時は  ここでは直接入れないで 一旦違う変数に入れておく 下の３つ
-        //    val set = intent.getSerializableExtra("set") as HashSet<PossibleCard>
             val poList = intent.getSerializableExtra("poList") as ArrayList<PossibleCard>
 
             val comAList = intent.getStringArrayListExtra("comAList") as ArrayList<PlayerListItem>
@@ -129,23 +126,19 @@ class StartFragment : Fragment() {
             // 一旦ローカル変数で取得した3つを  ディープコピーしておく (新たに 別のオブジェクト) ディープコピーしたオブジェクトも ローカル変数にしておく
             val deepComAList = ArrayList<PlayerListItem>(comAList) // ディープコピーすること 同じ参照にしないこと
             val deepComBList = ArrayList<PlayerListItem>(comBList) // ディープコピーすること 同じ参照にしないこと
-            val deepPoList = ArrayList<PossibleCard>(poList)  // ディープコピーすること (同じ参照にしないこと)
+            var deepPoList = ArrayList<PossibleCard>(poList)  // ディープコピーすること (同じ参照にしないこと)
 
             // comAの手
             // サブリストを取得する そのリストは後で インデックスで要素を取得したいので、Listにすべきです (Setは順番を持たないからです Setにはしません)
             // 置くことのできそうなpossibleカードを探してリストにする 複数見つかる時もあるし、空のリストを返す時もある
-            // deepPoList
-            val subListComA = getSubList(poList, comAList)  // 戻り値リストにします(Setだめです) 引数はintentから取得したもの
-
+            val subListComA = _game.getSubList(poList, comAList)  // 戻り値リストにします(Setだめです) 引数はintentから取得したもの
 
             if (subListComA.size != 0) {  // Aは　出せるので出す
                 // まずは プレイヤーの持ち手リストから、置いたカードを取り除く
-                var putCard: PossibleCard? = null
-                putCard = removeComPutCard(subListComA, deepComAList)  // 戻り値置いたカード
+                var putCard = removeComPutCard(subListComA, deepComAList)  // 戻り値置いたカード
                 // ここで、 comAの手持ちリストが最初に 0になったら、comAの勝ちですとする ゲーム終了
                 //  一番先に 手持ちが 0になった人の勝ちで ゲーム終了
                 // if else追加すること
-
 
                 // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                 for (item in _tableCardData) {
@@ -153,24 +146,31 @@ class StartFragment : Fragment() {
                         item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
                     }
                 }
-                // さらに、deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                // さらに、　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                 for (item in deepPoList) {
                     if (item.tag.equals(putCard?.tag)) {
                         item.placed = true  // 置いた
                         item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
                     }
                 }
-
-            //    changeSet(deepPoList, putCard)
-
-
+                val pTagStr: String = putCard!!.tag  // 置いたカードのタグの文字列 "S6" とか
+                val putNum: Int = pTagStr.substring(1).toInt()
+                val game =  Game()
+                // さらに、次に出せるカードの属性を変更する
+                val judge = Judgement(deepPoList)
+                if (putNum in 1..6) {
+                    val list = judge.methodSmall(pTagStr)  // 属性を書き換えた リストを返すので、
+                    deepPoList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
+                } else if (putNum in 8..13) {
+                    val list = judge.methodBig(pTagStr)  // 属性を書き換えた リストを返すので、
+                    deepPoList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
+                }
                 // comA トースト表示
                 val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_put_on, putCard!!.tag), Toast.LENGTH_SHORT)
                 toast.show()
             } else {  // Aは　出せない パスをします
                 val intent = Intent(activity, MainActivity::class.java) // もうパスができない場合にダイアログ出して遷移する
                 // もし コンピュータA  0  　   コンピュターB -1なら
-               //   if (_comAPassCounter == 0 && _comBPassCounter == 0) { // 終了
                  if (_comAPassCounter == 0 && _comBPassCounter == -1) { // ゲーム終了
                     // あなたの勝ちですダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
                     AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
@@ -182,7 +182,6 @@ class StartFragment : Fragment() {
                         .show()
                     // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
 
-               // } else if (_comAPassCounter == 0 && _comBPassCounter != 0) {
                  } else if (_comAPassCounter == 0 && _comBPassCounter != -1) { // もうパスできないので comAの負け
                      _comAPassCounter--  //  -1 にする コンピューターA はゲームオーバー
                      if (_comAPassCounter == -1) {
@@ -193,10 +192,10 @@ class StartFragment : Fragment() {
                     // comAの負けです トースト出す  comA手持ちを全て出す  comBとあなたでゲームは続く
                     val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_lose), Toast.LENGTH_SHORT)
                     toast.show()
-                    // comA負けたので手持ちを全て出す _deepComAListを変更空にする　_deepCardSetも変更すること 卓上にも並べること
+                    // comA負けたので手持ちを全て出す
                      // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
-                     val subDeepComAList = getSubList(deepComAList)
-                  //  val subDeepComAList = mutableListOf(deepComAList)  // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
+                     // 修正した
+                     val subDeepComAList = _game.getSubList(deepComAList)
                     // deepComAListを変更空にする リスト内の全要素を削除
                     deepComAList.clear()  // 最後にこの空にしたリスト をさらに _comAListにディープコピーをして lateinit varフィールドへ初期値として代入しています
                     //  comA手持ちを全て出す　卓上に並べる  とりあえず、卓上を placed trueの属性に変えればいい
@@ -208,8 +207,8 @@ class StartFragment : Fragment() {
                              }
                          }
                      }
-                    // deepPossibleCardSetは 　placed   possibleだけ を属性を書き換える
-                     // 出したカード(subDeepComAListの中身の要素が出したカードです)  の属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                    // 　placed   possibleだけ を属性を書き換える
+                     // 出したカード の属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                      for (item in deepPoList) {
                          for (pItem in subDeepComAList!!) {
                              if (item.tag.equals(pItem.pTag)) {
@@ -218,7 +217,6 @@ class StartFragment : Fragment() {
                              }
                          }
                      }
-                     //  changeSetメソッドは呼ばないこと！！
                 } else {
                     // まだパスできるから まだゲームは続けられる　 3人とも続いてる
                     _comAPassCounter--  //  comAはパスしたから パスカウンターだけをマイナスするだけ
@@ -234,7 +232,7 @@ class StartFragment : Fragment() {
             }
                 ////////　ここまでcomA
                 ////////　ここからcomB
-            val subListComB = getSubList(poList, comBList)  // リストにします インデックスで要素を取得したいなら、Listにすべきです Setは順番を持たないからです
+            val subListComB = _game.getSubList(poList, comBList)  // リストにします インデックスで要素を取得したいなら、Listにすべきです Setは順番を持たないからです
             if (subListComB.size != 0) {  // Bは　出せるので出す
                 // まずは プレイヤーの持ち手リスト から、置いたカードを取り除く  戻り値置いたカード
                 var putCard: PossibleCard? = null  // 出すカード
@@ -257,15 +255,21 @@ class StartFragment : Fragment() {
                         item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
                     }
                 }
-
-
-             //   changeSet(deepPoList, putCard)
-
-
+                val pTagStr: String = putCard!!.tag  // 置いたカードのタグの文字列 "S6" とか
+                val putNum: Int = pTagStr.substring(1).toInt()
+                val game =  Game()
+                // さらに、次に出せるカードの属性を変更する
+                val judge = Judgement(deepPoList)
+                if (putNum in 1..6) {
+                    val list = judge.methodSmall(pTagStr)  // 属性を書き換えた リストを返すので、
+                    deepPoList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
+                } else if (putNum in 8..13) {
+                    val list = judge.methodBig(pTagStr)  // 属性を書き換えた リストを返すので、
+                    deepPoList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
+                }
                 // comB トースト表示
                 val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comB_put_on, putCard!!.tag), Toast.LENGTH_SHORT)
                 toast.show()
-
             } else {  // Bは　出せない パスをします！！
                 val intent = Intent(activity, MainActivity::class.java)
                 if (_comBPassCounter == 0 && _comAPassCounter == -1) { // ゲーム終了
@@ -288,7 +292,8 @@ class StartFragment : Fragment() {
                     // comBの負けです トースト出す  comB手持ちを全て出す  comAとあなたでゲームは続く
                     val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comB_lose), Toast.LENGTH_SHORT)
                     toast.show()
-                    val subDeepComBList = getSubList(deepComBList)  // 手持ちリストをクリアする前にディープコピーをしておく(全く別のオブジェクト生成)
+                    // 修正した
+                    val subDeepComBList = _game.getSubList(deepComBList)  // 手持ちリストをクリアする前にディープコピーをしておく(全く別のオブジェクト生成)
                     deepComBList.clear()  // 最後にこの空にしたリスト をさらに _comBListにディープコピーをして lateinit varフィールドへ初期値として代入しています
                     for (item in _tableCardData) {
                         for (pItem in subDeepComBList!!) {
@@ -297,8 +302,8 @@ class StartFragment : Fragment() {
                             }
                         }
                     }
-                    // deepPossibleCardSetは 　placed   possibleだけ を属性を書き換える
-                    // 出したカード(subDeepComBListの中身の要素が出したカードです)  の属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                    // 　placed   possibleだけ を属性を書き換える
+                    // 出したカード の属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                     for (item in deepPoList) {
                         for (pItem in subDeepComBList!!) {
                             if (item.tag.equals(pItem.pTag)) {
@@ -307,7 +312,6 @@ class StartFragment : Fragment() {
                             }
                         }
                     }
-                    //  changeSetメソッドは呼ばないこと！！
                 } else {
                     // まだパスできるから まだゲームは続けられる　 3人とも続いてる
                     _comBPassCounter--  //  comBはパスしたから パスカウンターだけをマイナスするだけ
@@ -417,240 +421,6 @@ class StartFragment : Fragment() {
     }
 
     /**
-     * リストをディープコピーする.新しい別のオブジェクトを生成する(全く同じ内容にする).インスタンスメソッド
-     * 多重定義(オーバーロード) シグネチャが異なれば同名のメソッドで、異なる内容の処理が書ける.
-     * 新しくオブジェクトを作り直して ディープコピーをする MutableListじゃないとだめ
-     */
-    fun <T> getSubList(list: List<T>): List<T>? {
-        val subList: MutableList<T> = ArrayList()  // MutableList
-        for (i in list.indices) { // indicesプロパティで   インデックスの範囲が得られる  0..6　など IntRange
-            subList.add(list[i])
-        }
-        return subList
-    }
-
-    /**
-     * 多重定義(オーバーロード) シグネチャが異なれば同名のメソッドで、異なる内容の処理が書ける.インスタンスメソッド
-     * リストをディープコピーする.
-     * プレイヤーのカードを人数分で分ける.新しくオブジェクトを作り直して ディープコピーをする MutableListじゃないとだめ
-     */
-//        fun <T> getSubList(list: List<T>, start: Int, end: Int): List<T>? {
-//        val subList: MutableList<T> = ArrayList()  // MutableList
-//        for (i in start..end) {
-//            subList.add(list[i])
-//        }
-//        return subList
-//        }
-
-
-    /**
-     * オーバーロード(多重定義)
-     * インデックで要素を取得したいなら、戻り値は Listにすべきです Setは順番を持たないからです
-     * HashSet<PossibleCard>　の中から 同じタグで かつ possible属性が true の PossibleCardオブジェクトを取得
-     * 置くことのできそうなカードを探してリストにする 複数見つかる時もあるし、空のリストを返す時もある
-     * 戻り値 ArrayList<PossibleCard>型です
-     */
-    fun getSubList(poList: ArrayList<PossibleCard>, comList: ArrayList<PlayerListItem>): ArrayList<PossibleCard> {
-        val arrayList: ArrayList<PossibleCard> = ArrayList()
-        for (possibleCard in poList) {
-            for (item in comList) {
-                if (possibleCard.tag.equals(item.pTag) && possibleCard.possible == true) {
-                    arrayList.add(possibleCard)
-                }
-            }
-        }
-        return arrayList
-    }
-
-    /**
-     * 作り直してる
-     */
-//    fun changeSet(set: HashSet<PossibleCard>, putCard: PossibleCard?) {
-//        // 今置いたカードの数
-//        val numInt = (putCard!!.tag).substring(1).toInt()  // 8　とか 6 とか
-//        val rangeMore: IntRange = 8..12
-//        val rangeLess: IntRange = 2..6
-//        if (numInt in rangeMore ) {
-//            for (n in 9..13) {
-//                // メソッドでインスタンスを取得して属性をチェックする
-//                var card = _game.getPossibleCard(set, putCard!!.tag, n)
-//                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-//                    card.possible = true // 可能に trueを入れる
-//                    break // 抜ける
-//                }
-//            }
-//        } else if (numInt == 13) {
-//            // １つ目のループで 先にクリアしてから
-//            for ( num in 1..6) {  // 数字が 1から6までのカードを調べる
-//                var card = _game.getPossibleCard(
-//                    set,
-//                    putCard!!.tag,
-//                    num
-//                )
-//                // 先にクリア
-//                if (card != null && card.placed == false && card.possible == true) {
-//                    card.possible = false // 1から6までのカード全部　置ける を 一旦 置けない でクリアしておく
-//                }
-//            }
-//            // もう一度別のループで設定し直す
-//            for ( num in 1..6) {  // 数字が 1から6までのカードを調べる
-//                var card = _game.getPossibleCard(
-//                    set,
-//                    putCard!!.tag,
-//                    num
-//                )
-//                // 設定し直しする
-//                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-//                    card.possible = true // 可能に trueを入れる 最初に見つかったやつだけ
-//                    break // 抜ける 最初に見つかったら trueにしたらすぐループを抜ける
-//                }
-//            }
-//        } else if (numInt in rangeLess) {
-//            for (n in 5 downTo 1) {
-//                // メソッドでインスタンスを取得して属性をチェックする
-//                var card = _game.getPossibleCard(set, putCard!!.tag, n)
-//                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-//                    card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
-//                    break // 抜ける
-//                }
-//            }
-//        } else if (numInt == 1) { // 今置いたカード numInt 1 の時には  上で 置いたになってます item.placed = true
-//            // １つ目のループで 先にクリアしてから
-//            for (num in 13 downTo 8) {  // 数字が 13から8までのカードを調べる
-//                var card = _game.getPossibleCard(
-//                    set,
-//                    putCard!!.tag,
-//                    num
-//                )
-//                // クリアします
-//                if (card != null && card.placed == false && card.possible == true) {
-//                    card.possible = false // 13から8までのカード全部　置ける を 一旦 置けない でクリアしておく
-//                }
-//            }
-//            // もう一度別のループで設定し直す
-//            for (num in 13 downTo 8) {  // 数字が 13から8までのカードを調べる
-//                var card = _game.getPossibleCard(
-//                    set,
-//                    putCard!!.tag,
-//                    num
-//                )
-//                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-//                    card.possible = true // 可能に trueを入れる 最初に見つかったやつだけ
-//                    break // 抜ける 最初に見つかったら trueにしたらすぐループを抜ける
-//                }
-//            }
-//        }
-//    }
-
-    /**
-     * コンピュータの手の動き カードのセットの属性の変更
-     * _deepPossibleCardSetが実引数
-     *
-     */
-//    fun changeSet(set: HashSet<PossibleCard>, putCard: PossibleCard?) {
-//
-//        val numInt = (putCard?.tag)?.substring(1)?.toInt()  // 8　とか 6 とか
-//        val rangeMore: IntRange = 8..13
-//        val rangeLess: IntRange = 1..6
-//        var reverse: Boolean = false
-//        if (numInt in rangeMore && reverse == false) {  // +1づつ 直近のものから調べる
-//            for (n in 9..13) {
-//                // メソッドでインスタンスを取得して属性をチェックする
-//                var card = _game.getPossibleCard(set, putCard!!.tag, n)
-//                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-//                    card.possible = true // 可能に trueを入れる
-//                    break // 抜ける
-//                }
-//                // ループで 直近で  card.placed == falseの物を見つけていきます
-//                if (card != null && card.placed == true && n == 13) {   // 13まで調べても 13もすでに置いてあるならば
-//                    for (num in 1..6) {  // 数字が 1から6までのカードを調べる
-//                        var card = _game.getPossibleCard(
-//                            set, // _deepPossibleCardSetが実引数
-//                            putCard!!.tag,
-//                            num
-//                        ) // 最初のループの時に　1のカードを取得
-//                        if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-//                            card.possible = true // 可能に trueを入れる
-//                            if (card.distance == -6) { //  "1" のカードは distance -6 です ここに来るのは "1"のカードはまだ置いてない placed == false だから、
-//                                // 例えば "1" を trueにしたら、もし、 +1 のカード(2)から 6のカードで、まだplaced false 置いてなくて、possibleが trueのものが
-//                                // あったら、それを possible falseに 変更しないといけない
-//                                // 今置いたのが "13"だから、次に置けるのは "1"のカードであって、 +1 のカード(2)から 6のカード ではなくなりますから
-//                                // ただし、ゲームオーバーして、手持ちを卓上に置いている場合もありますので、まず、置いてないことを条件にします
-//                                reverse = true
-//                                for ( n in 2..6) {
-//                                    var card = _game.getPossibleCard(set, putCard!!.tag, n)
-//                                    if (card != null && card.placed == false && card.possible == true) { // もし、まだ置いてないカードが見つかった時点で
-//                                        card.possible = false // 不可能にする
-//                                        // 条件に合うものは 全て possible false　にしないといけないから breakは書かない
-//                                    }
-//                                }
-//
-//                            }
-//                            break // 抜ける
-//                        }
-//                        // また、 +1づつ直近から調べていって  6までみて 6も trueなら何もせずに抜ける
-//                    }
-//                }
-//            }
-//        } else if (numInt in rangeLess && reverse == false) {  // 6 とか
-//            for (n in 5 downTo 1) {
-//                var card = _game.getPossibleCard(set, putCard!!.tag, n)
-//                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-//                    card.possible = true // 可能に trueを入れる
-//                    break // 抜ける
-//                }
-//                if (card != null && card.placed == true && n == 1 ) {  // 1まで調べても 1もすでに置いてあるならば
-//                    for (num in 13 downTo 8) {  // 数字が 13から8までのカードを調べる downTo と使うと 13から始まり逆順に 12 11 10 9 8 とループする
-//                        var card = _game.getPossibleCard(
-//                            set,  // _deepPossibleCardSetが実引数
-//                            putCard.tag,
-//                            num
-//                        ) // ループの最初は 13 のカードを取得
-//                        if (card != null && card.placed == false) {  // もし、まだ置いてないカードが見つかった時点で
-//                            card.possible = true  // 可能に trueを入れる
-//                            if (card.distance == 6) {  // distance == 6 と言うのは  13のカードのこと
-//                                // 出したカードが 1　　 trueを入れたのが 13のカードだったら、つまり次に置けるカードは 13のカードになったら
-//                                //  12 ~ 8  で まだ置いてなくてplacedが falseで 、possibleが trueのものがあれば 全て possible  falseに 変更しないといけない
-//                                    // 後でやるので ここでは reverseに trueを入れておく
-//                                reverse = true
-//                                for ( n in 8..12) {
-//                                    var card = _game.getPossibleCard(set, putCard!!.tag, n)
-//                                    if (card != null && card.placed == false && card.possible == true) { // もし、まだ置いてないカードが見つかった時点で
-//                                        card.possible = false // 不可能にする
-//                                        // 条件に合うものは 全て possible false　にしないといけないから breakは書かない
-//                                    }
-//                                }
-//                            }
-//                            break  // 抜ける
-//                        }
-//                        // また、 -1づつ直近から調べていって 8もplacedが trueなら、何もせずにループは終わり
-//                    }
-//                }
-//            }
-//        }else if (numInt in rangeLess && reverse == true) {
-//            for ( n in 2..6) {
-//                // メソッドでインスタンスを取得して属性をチェックする
-//                var card = _game.getPossibleCard(set, putCard!!.tag, n)
-//                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-//                    card.possible = true // 可能に trueを入れる
-//                    break // 抜ける
-//                }
-//                // 6まで回って みんな card.placed == true なら　何もしないで終わり
-//            }
-//        } else if (numInt in rangeMore && reverse == true) {
-//            for ( n in 12 downTo 8) {
-//                // メソッドでインスタンスを取得して属性をチェックする
-//                var card = _game.getPossibleCard(set, putCard!!.tag, n)
-//                if (card != null && card.placed == false) { // もし、まだ置いてないカードが見つかった時点で
-//                    card.possible = true // 可能に trueを入れる
-//                    break // 抜ける
-//                }
-//                // 8まで回って みんな card.placed == true なら　何もしないで終わり
-//            }
-//        }
-//   }
-
-    /**
      * コンピューターの持ち手リストから 出したカードを取り除く.
      * java.util.ConcurrentModificationException を回避するために forは使わないでください.
      *  subListComA _deepComAList などを 実引数にとる.
@@ -662,7 +432,6 @@ class StartFragment : Fragment() {
         randomIndex = Random.nextInt(sublist.size)  // 3つ 出せるのがあったら 0 1 2　とかどれかが返ります　
         putCard = sublist.get(randomIndex)
         //  プレイヤーの持ち手リスト から、出したカードを取り除く
-
         // java.util.ConcurrentModificationException を回避するために forは使わないでください
         val iterator = comList.iterator()  // 元のコレクションを書き換えます エラーなしで
         while (iterator.hasNext()){
