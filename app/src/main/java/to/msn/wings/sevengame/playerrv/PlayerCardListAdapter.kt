@@ -152,9 +152,7 @@ class PlayerCardListAdapter(
                         item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
                     }
                 }
-
-                // ここからまだできてない
-
+                // 次に出せるカードの変更
                 val pTagStr: String = txtP.text.toString()  // 置いたカードのタグの文字列 "S6" とか
                 val putNum: Int = pTagStr.substring(1).toInt()
                 val game =  Game()

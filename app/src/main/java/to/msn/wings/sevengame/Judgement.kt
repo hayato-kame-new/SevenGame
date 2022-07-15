@@ -6,29 +6,6 @@ class Judgement( poList: ArrayList<PossibleCard> ){
     val _game = Game()
     // ディープコピーすること   そしてこの値を最後メソッドで返す　
     val _deepPossibleCardList: ArrayList<PossibleCard> = _game.getSubList(poList) as ArrayList<PossibleCard>
-
-
-//    val subSSmall = _game.getSubList(_deepPossibleCardList, 0, (_deepPossibleCardList.size / 8) - 1 ) as ArrayList<PossibleCard>
-//    // 7のカードは含めないで作る "S8" から "S13"
-//    val subSBig = _game.getSubList(_deepPossibleCardList, (_deepPossibleCardList.size / 8) + 1, (_deepPossibleCardList.size * 2 / 8) - 1 ) as ArrayList<PossibleCard>
-//
-//    // "H1" から "H6"
-//    val subHSmall = _game.getSubList(_deepPossibleCardList, _deepPossibleCardList.size * 2 / 8, (_deepPossibleCardList.size * 3 / 8) - 1 ) as ArrayList<PossibleCard>
-//    // 7のカードは含めないで作る "H8" から "H13"
-//    val subHBig = _game.getSubList(_deepPossibleCardList, (_deepPossibleCardList.size * 3 / 8) + 1, (_deepPossibleCardList.size * 4 / 8) - 1 ) as ArrayList<PossibleCard>
-//
-//    // "D1" から "D6"
-//    val subDSmall = _game.getSubList(_deepPossibleCardList, _deepPossibleCardList.size * 4 / 8, (_deepPossibleCardList.size * 5 / 8) - 1 ) as ArrayList<PossibleCard>
-//    // 7のカードは含めないで作る "D8" から "D13"
-//    val subDBig = _game.getSubList(_deepPossibleCardList, (_deepPossibleCardList.size * 5 / 8) + 1, (_deepPossibleCardList.size * 6 / 8) - 1 ) as ArrayList<PossibleCard>
-//
-//    // "C1" から "C2"
-//    val subCSmall = _game.getSubList(_deepPossibleCardList, _deepPossibleCardList.size * 6 / 8, (_deepPossibleCardList.size * 7 / 8) - 1 ) as ArrayList<PossibleCard>
-//    // 7のカードは含めないで作る "C8" から "C13"
-//    val subCBig = _game.getSubList(_deepPossibleCardList, (_deepPossibleCardList.size * 7 / 8) + 1, _deepPossibleCardList.size - 1 ) as ArrayList<PossibleCard>
-//    val _tagList: ArrayList<String> = arrayListOf("S", "H", "D", "C")
-
-
     /**
      * 小さいカード置いた時
      */
@@ -71,12 +48,34 @@ class Judgement( poList: ArrayList<PossibleCard> ){
                     }
                 }
             }
-        } else {
-            for (num in 6 downTo 1) {
+        } else { // 置いたカード１以外の時 2 ~ 6の時
+
+            var count = 0
+            for (num in 8..13) {
                 var card = _game.getPossibleCard(_deepPossibleCardList, pTagStr, num)
-                if (card != null && card.placed == false) { // もし、13から8まで　リストに まだ置いてないカードが見つかった時点で
-                    card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
-                    break // 抜ける
+                if (card != null && card.placed == true) {
+                    count++
+                }
+            }
+            if (count == 6) {
+                // カウント6だったら、13まで置かれていて 1を置いてる つまり逆向きになってる
+                //  1 2 3 4 5 6 と置けるようにする
+                for (num in 1..6) {
+                    var card = _game.getPossibleCard(_deepPossibleCardList, pTagStr, num)
+                    if (card != null && card.placed == false) { // もし、5から１まで　リストに まだ置いてないカードが見つかった時点で
+                        card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
+                        break // 抜ける
+                    }
+                }
+            } else {
+                // カウント6 でなければ、普通の向きです
+                // 置いたカードが 2〜６の時には　正常の向きの時はこれでいいのです!!
+                for (num in 6 downTo 1) { // 6 5 4 3 2 1
+                    var card = _game.getPossibleCard(_deepPossibleCardList, pTagStr, num)
+                    if (card != null && card.placed == false) { // もし、13から8まで　リストに まだ置いてないカードが見つかった時点で
+                        card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
+                        break // 抜ける
+                    }
                 }
             }
         }
@@ -127,12 +126,33 @@ class Judgement( poList: ArrayList<PossibleCard> ){
                         }
                     }
                 }
-            } else {
-                for (num in 8..13) {
+            } else {  // 13以外で 8 ~ 12のカードを出した時
+                var count = 0
+                for (num in 1..6) {
                     var card = _game.getPossibleCard(_deepPossibleCardList, pTagStr, num)
-                    if (card != null && card.placed == false) { // もし、13から8まで　リストに まだ置いてないカードが見つかった時点で
-                        card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
-                        break // 抜ける
+                    if (card != null && card.placed == true) {
+                        count++
+                    }
+                }
+                if (count == 6) {
+                    // カウントが 6ならば 1まで置かれていて 13を置いてる つまり逆向きになってる
+                    //  13 12 11 10 9 8  と置けるようにする
+                    for (num in 13 downTo 8) {
+                        var card = _game.getPossibleCard(_deepPossibleCardList, pTagStr, num)
+                        if (card != null && card.placed == false) { // もし、13から8まで　リストに まだ置いてないカードが見つかった時点で
+                            card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
+                            break // 抜ける
+                        }
+                    }
+                } else {
+                    // 置いたカードが 8 ~ 12のカードで、
+                    // 正常の向きの時はこれでいいのです
+                    for (num in 8..13) {  // 8,9,10,11,12,13
+                        var card = _game.getPossibleCard(_deepPossibleCardList, pTagStr, num)
+                        if (card != null && card.placed == false) { // もし、13から8まで　リストに まだ置いてないカードが見つかった時点で
+                            card.possible = true // 可能に trueを入れる 見つかった時点ですぐbreak
+                            break // 抜ける
+                        }
                     }
                 }
             }
