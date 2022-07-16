@@ -180,45 +180,15 @@ class StartFragment : Fragment() {
                     val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_put_on, putCard!!.tag), Toast.LENGTH_SHORT)
                     toast.show()
                 }
+            } else {  // Aは　出せない
+                _comAPassCounter--  //  comAはパスした  パスカウンターをマイナス
+                // もしここで -1 となったら、comAはゲームオーバー
+                comDisplay(_aTxt, _comAPassCounter)  // 表示用テキスト
 
-
-
-//                // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-//                for (item in _tableCardData) {
-//                    if (item.tag.equals(putCard?.tag)) {
-//                        item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
-//                    }
-//                }
-//                // さらに、　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-//                for (item in deepPoList) {
-//                    if (item.tag.equals(putCard?.tag)) {
-//                        item.placed = true  // 置いた
-//                        item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
-//                    }
-//                }
-//                val pTagStr: String = putCard!!.tag  // 置いたカードのタグの文字列 "S6" とか
-//                val putNum: Int = pTagStr.substring(1).toInt()
-//                val game =  Game()
-//                // さらに、次に出せるカードの属性を変更する
-//                val judge = Judgement(deepPoList)
-//                if (putNum in 1..6) {
-//                    val list = judge.methodSmall(pTagStr)  // 属性を書き換えた リストを返すので、
-//                    deepPoList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
-//                } else if (putNum in 8..13) {
-//                    val list = judge.methodBig(pTagStr)  // 属性を書き換えた リストを返すので、
-//                    deepPoList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
-//                }
-//                // comA トースト表示
-//                val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_put_on, putCard!!.tag), Toast.LENGTH_SHORT)
-//                toast.show()
-
-
-            } else {  // Aは　出せない パスをします
-                val intent = Intent(activity, MainActivity::class.java) // もうパスができない場合にダイアログ出して遷移する
-                // もし コンピュータA  0  　   コンピュターB -1なら
-                 if (_comAPassCounter == 0 && _comBPassCounter <= -1 ) { // ゲーム終了
+                // ここでコンピュターA B 両方 -1 となった時点でゲーム終了
+                if (_comAPassCounter <= -1 && _comBPassCounter <= -1 ) { // ゲーム終了
                     // あなたの勝ちですダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
-                     val intent = Intent(context, MainActivity::class.java)  // 必要
+                    val intent = Intent(context, MainActivity::class.java)  // 必要
                     AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
                         .setTitle("あなたの勝ちです")
                         .setMessage("ゲーム再開する")
@@ -228,85 +198,60 @@ class StartFragment : Fragment() {
                         .show()
                     // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
 
-                 } else if (_comAPassCounter == 0 && _comBPassCounter >= 0) { // もうパスできないので comAの負け
-                     _comAPassCounter--  //  -1 にする コンピューターA はゲームオーバー
-                     if (_comAPassCounter == -1) {
-                         _aTxt.text = " 負けました "
-                         _aTxt.setTextColor(activity?.resources?.getColor(R.color.white)!!)
-                         _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.black)!!)
-                     }
+                } else if (_comAPassCounter == -1 && _comBPassCounter >= 0) { // もうパスできないので comAの負け ゲームはまだ続く
                     // comAの負けです トースト出す  comA手持ちを全て出す  comBとあなたでゲームは続く
-                    val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_lose), Toast.LENGTH_SHORT)
+                    val toast: Toast = Toast.makeText(
+                        activity,
+                        activity?.getString(R.string.comA_lose),
+                        Toast.LENGTH_SHORT
+                    )
                     toast.show()
                     // comA負けたので手持ちを全て出す
-                     // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
-                     // 修正した
-                     val subDeepComAList = _game.getSubList(deepComAList)
+                    // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
+                    val subDeepComAList = _game.getSubList(deepComAList)
                     // deepComAListを変更空にする リスト内の全要素を削除
                     deepComAList.clear()  // 最後にこの空にしたリスト をさらに _comAListにディープコピーをして lateinit varフィールドへ初期値として代入しています
                     //  comA手持ちを全て出す　卓上に並べる  とりあえず、卓上を placed trueの属性に変えればいい
-                     // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-                     for (item in _tableCardData) {
-                         for (pItem in subDeepComAList!!) {
-                             if (item.tag.equals(pItem.pTag)) {
-                                 item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
-                             }
-                         }
-                     }
+                    // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                    for (item in _tableCardData) {
+                        for (pItem in subDeepComAList!!) {
+                            if (item.tag.equals(pItem.pTag)) {
+                                item.placed =
+                                    true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
+                            }
+                        }
+                    }
                     // 　placed   possibleだけ を属性を書き換える
-                     // 出したカード の属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-                     for (item in deepPoList) {
-                         for (pItem in subDeepComAList!!) {
-                             if (item.tag.equals(pItem.pTag)) {
-                                 item.placed = true  // 置いた
-                                 item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
-                             }
-                         }
-                     }
+                    // 出したカード の属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                    for (item in deepPoList) {
+                        for (pItem in subDeepComAList!!) {
+                            if (item.tag.equals(pItem.pTag)) {
+                                item.placed = true  // 置いた
+                                item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
+                            }
+                        }
+                    }
+
                 } else {
                     // まだパスできるから まだゲームは続けられる　 3人とも続いてる
-                    _comAPassCounter--  //  comAはパスしたから パスカウンターだけをマイナスするだけ
-                     val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_pass), Toast.LENGTH_SHORT)
-                     toast.show()
-                    _aTxt.text = " パス 残り " + _comAPassCounter.toString() + "回"
-
-                    if (_comAPassCounter == 0) {
-                        _aTxt.text = " パス 残りなし"
-                        _aTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
-                    }
+                    val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_pass), Toast.LENGTH_SHORT)
+                    toast.show()
                 }
+
             }
-
-
-
-
-//            if (deepComAList.size == 0) {
-//                val intent = Intent(context, MainActivity::class.java)  //必要
-//                // あなたの勝ちです！！ ダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
-//                AlertDialog.Builder(context) // FragmentではActivityを取得して生成  Adapter onBindViewHolder では holder.itemView.context
-//                    .setTitle("コンピュータA の勝ちです")
-//                    .setMessage("ゲーム再開する")
-//                    .setPositiveButton("OK", { dialog, which ->
-//                        context?.startActivity(intent)
-//                    })
-//                    .show()
-//                // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
-//            }
                 ////////　ここまでcomA
                 ////////　ここからcomB
             val subListComB = _game.getSubList(poList, comBList)  // リストにします インデックスで要素を取得したいなら、Listにすべきです Setは順番を持たないからです
             if (subListComB.size != 0) {  // Bは　出せるので出す
-                // まずは プレイヤーの持ち手リスト から、置いたカードを取り除く  戻り値置いたカード
-                var putCard: PossibleCard? = null  // 出すカード
-                putCard = removeComPutCard(subListComB, deepComBList)
-                // ここで、 comBの手持ちリストが最初に 0になったら、comAの勝ちですとする ゲーム終了
+                // まずは comBの持ち手リストから、置いたカードを取り除く
+                var putCard = removeComPutCard(subListComB, deepComBList)  // 戻り値置いたカード
+                // ここで、 comBの手持ちリストが最初に 0になったら、comBの勝ちですとする ゲーム終了
                 //  一番先に 手持ちが 0になった人の勝ちで ゲーム終了
-                // if else追加すること
                 if (deepComBList.size == 0) {
-                    val intent = Intent(context, MainActivity::class.java)  // 必要
+                    val intent = Intent(context, MainActivity::class.java)  //必要
                     // あなたの勝ちです！！ ダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
                     AlertDialog.Builder(context) // FragmentではActivityを取得して生成  Adapter onBindViewHolder では holder.itemView.context
-                        .setTitle("コンピュータBの勝ちです")
+                        .setTitle("コンピュータB の勝ちです")
                         .setMessage("ゲーム再開する")
                         .setPositiveButton("OK", { dialog, which ->
                             context?.startActivity(intent)
@@ -320,7 +265,7 @@ class StartFragment : Fragment() {
                             item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
                         }
                     }
-                    // さらに、deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
+                    // さらに、　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                     for (item in deepPoList) {
                         if (item.tag.equals(putCard?.tag)) {
                             item.placed = true  // 置いた
@@ -343,39 +288,13 @@ class StartFragment : Fragment() {
                     val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comB_put_on, putCard!!.tag), Toast.LENGTH_SHORT)
                     toast.show()
                 }
+            } else {  // Bは　出せない
+                _comBPassCounter--  //  comBはパスした  パスカウンターをマイナス
+                // もしここで -1 となったら、comBはゲームオーバー
+                comDisplay(_bTxt, _comBPassCounter)  // 表示用テキスト
 
-
-//                // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-//                for (item in _tableCardData) {
-//                    if (item.tag.equals(putCard?.tag)) {
-//                        item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
-//                    }
-//                }
-//                // さらに、deepPossibleCardSet の　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-//                for (item in deepPoList) {
-//                    if (item.tag.equals(putCard?.tag)) {
-//                        item.placed = true  // 置いた
-//                        item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
-//                    }
-//                }
-//                val pTagStr: String = putCard!!.tag  // 置いたカードのタグの文字列 "S6" とか
-//                val putNum: Int = pTagStr.substring(1).toInt()
-//                val game =  Game()
-//                // さらに、次に出せるカードの属性を変更する
-//                val judge = Judgement(deepPoList)
-//                if (putNum in 1..6) {
-//                    val list = judge.methodSmall(pTagStr)  // 属性を書き換えた リストを返すので、
-//                    deepPoList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
-//                } else if (putNum in 8..13) {
-//                    val list = judge.methodBig(pTagStr)  // 属性を書き換えた リストを返すので、
-//                    deepPoList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
-//                }
-//                // comB トースト表示
-//                val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comB_put_on, putCard!!.tag), Toast.LENGTH_SHORT)
-//                toast.show()
-            } else {  // Bは　出せない パスをします！！
-                val intent = Intent(activity, MainActivity::class.java)
-                if (_comBPassCounter == 0 && _comAPassCounter <= -1) { // ゲーム終了
+                // ここでコンピュターA B 両方 -1 となった時点でゲーム終了
+                if (_comBPassCounter <= -1 && _comAPassCounter <= -1) { // ゲーム終了
                     // あなたの勝ちですダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
                     val intent = Intent(context, MainActivity::class.java)  // 必要
                     AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
@@ -386,23 +305,27 @@ class StartFragment : Fragment() {
                         })
                         .show()
                     // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
-                } else if (_comBPassCounter == 0 && _comAPassCounter >= 0) {  // もうパスはできないので comBの負けです
-                    _comBPassCounter--  // -1 にしておく コンピューターB はゲームオーバー
-                    if (_comBPassCounter == -1) {
-                        _bTxt.text = " 負けました "
-                        _bTxt.setTextColor(activity?.resources?.getColor(R.color.white)!!)
-                        _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.black)!!)
-                    }
+
+                } else if (_comBPassCounter == -1 && _comAPassCounter >= 0) { // もうパスできないので comBの負け ゲームはまだ続く
                     // comBの負けです トースト出す  comB手持ちを全て出す  comAとあなたでゲームは続く
-                    val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comB_lose), Toast.LENGTH_SHORT)
+                    val toast: Toast = Toast.makeText(
+                        activity,
+                        activity?.getString(R.string.comB_lose),
+                        Toast.LENGTH_SHORT
+                    )
                     toast.show()
-                    // 修正した
-                    val subDeepComBList = _game.getSubList(deepComBList)  // 手持ちリストをクリアする前にディープコピーをしておく(全く別のオブジェクト生成)
+                    // comB負けたので手持ちを全て出す
+                    // クリアする前にディープコピーしておく 全く別のオブジェクトを生成
+                    val subDeepComBList = _game.getSubList(deepComBList)
+                    // deepComBListを変更空にする リスト内の全要素を削除
                     deepComBList.clear()  // 最後にこの空にしたリスト をさらに _comBListにディープコピーをして lateinit varフィールドへ初期値として代入しています
+                    //  comB手持ちを全て出す　卓上に並べる  とりあえず、卓上を placed trueの属性に変えればいい
+                    // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                     for (item in _tableCardData) {
                         for (pItem in subDeepComBList!!) {
                             if (item.tag.equals(pItem.pTag)) {
-                                item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
+                                item.placed =
+                                    true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
                             }
                         }
                     }
@@ -418,32 +341,14 @@ class StartFragment : Fragment() {
                     }
                 } else {
                     // まだパスできるから まだゲームは続けられる　 3人とも続いてる
-                    _comBPassCounter--  //  comBはパスしたから パスカウンターだけをマイナスするだけ
-                    val toast: Toast = Toast.makeText(activity, activity?.getString(R.string.comA_pass), Toast.LENGTH_SHORT)
+                    val toast: Toast = Toast.makeText(
+                        activity,
+                        activity?.getString(R.string.comB_pass),
+                        Toast.LENGTH_SHORT
+                    )
                     toast.show()
-                    _bTxt.text = " パス 残り " + _comBPassCounter.toString() + "回"
-
-                    if (_comBPassCounter == 0) {
-                        _bTxt.text = " パス 残りなし"
-                        _bTxt.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
-                    }
                 }
             }
-
-
-
-//            if (deepComBList.size == 0) {
-//                val intent = Intent(context, MainActivity::class.java)  // 必要
-//                // あなたの勝ちです！！ ダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
-//                AlertDialog.Builder(context) // FragmentではActivityを取得して生成  Adapter onBindViewHolder では holder.itemView.context
-//                    .setTitle("コンピュータBの勝ちです")
-//                    .setMessage("ゲーム再開する")
-//                    .setPositiveButton("OK", { dialog, which ->
-//                        context?.startActivity(intent)
-//                    })
-//                    .show()
-//                // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
-//            }
             ////////　ここまでcomB
 
             // ここで lateinit varフィールドに 初期値を代入する
