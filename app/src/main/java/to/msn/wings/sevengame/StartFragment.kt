@@ -371,10 +371,13 @@ class StartFragment : Fragment() {
             }
         }
 
-        // プレイヤーのパスボタンのクリックリスナー
+        // プレイヤー(あなた)のパスボタンのクリックリスナー
         _passBtn.setOnClickListener {
-            val intent = Intent(activity, MainActivity::class.java)
-            if (_playerPassCounter == 0) {
+            // まず、ここで パスカウンターをマイナスしてから判定をすること 最初 3が入ってるから １回パスしたら  2になります
+            _playerPassCounter--  // 2　とかになる 2 1 0 となる   0  になった時に 次にもう一度押したら あなたの負けにする
+            // 変更後のパスカウンターによって分岐する
+            if (_playerPassCounter == -1) {
+                val intent = Intent(activity, MainActivity::class.java) // 必要
                 // あなたの負けです ダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
                 AlertDialog.Builder(activity) // FragmentではActivityを取得して生成
                     .setTitle("あなたの負けです")
@@ -383,17 +386,15 @@ class StartFragment : Fragment() {
                         activity?.startActivity(intent)
                     })
                     .show()
-                // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
             } else {
                 // まだゲームは続けられる
-                _playerPassCounter--
-
                 _passBtn.text = "パス 残り " + _playerPassCounter.toString() + "回"
-                if (_playerPassCounter == 0) {
+                if (_playerPassCounter == 0) {  //  0になった時に ボタンの表示を変える
                     _passBtn.text = "ゲームに負ける"
                     _passBtn.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
                 }
-                // あなたがパスしたから 8つ intent.putExtraして、またMainActivity elseブロックへ戻ってきます
+                 // あなたがパスしたから 8つ intent.putExtraして、またMainActivity elseブロックへ戻ってきます
+                val intent = Intent(activity, MainActivity::class.java)  // 必要
                 intent.putExtra( "data" ,_playerList as ArrayList<PlayerListItem>)
                 intent.putExtra("poList", _possibleCardList as ArrayList<PossibleCard>)
                 intent.putExtra( "tableCardData" ,_tableCardData as ArrayList<ListItem>)
@@ -455,7 +456,7 @@ class StartFragment : Fragment() {
         // nextInt() は 0 から引数に指定した値未満の整数を返します
         randomIndex = Random.nextInt(sublist.size)  // 3つ 出せるのがあったら 0 1 2　とかどれかが返ります　
         putCard = sublist.get(randomIndex)
-        //  プレイヤーの持ち手リスト から、出したカードを取り除く
+        //  コンピューターの持ち手リスト から、出したカードを取り除く
         // java.util.ConcurrentModificationException を回避するために forは使わないでください
         val iterator = comList.iterator()  // 元のコレクションを書き換えます エラーなしで
         while (iterator.hasNext()){
