@@ -144,8 +144,11 @@ class PlayerCardListAdapter(
                         .setPositiveButton("OK", { dialog, which ->
                             context.startActivity(intent)
                         })
-                        .show()
+                        //   .show()
+                        .setCancelable(false).show().setCanceledOnTouchOutside(false)  //  .setCancelable(false).show().setCanceledOnTouchOutside(false) の順番
                     // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
+                // setCancelable を false にすると、戻るボタンを押してもダイアログが閉じなくなります。
+                // そして Dialog クラスの setCanceledOnTouchOutside メソッドを false にすると、ダイアログの外側をタップしてもダイアログが閉じなくなります
                 } else {
 
                     // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える

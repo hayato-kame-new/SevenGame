@@ -9,22 +9,23 @@ import kotlin.collections.LinkedHashMap
 
 /**
  * 今回はJOKERなしでゲームを作っていく.
- * アダプターのコンストラクタに渡すリストを、データベースなどから取得してきます.
+ * プレイヤー(あなた)と コンピュータA  コンピュータB の 3人でゲームする
+ * 本来は アダプターのコンストラクタに渡すリストを、データベースなどから取得してきます.
  * 今回は、固定のリストなので、ここで作ってしまう.
- *
+ * intent.putExtra する際に 第二引数が ArrayList<E> である必要があるために、intentで遷移する時に渡すならば、ArrayList<E>を使う(MutableListではなく)
  */
 class Game {
-//  intent.putExtra する際に 第二引数が ArrayList<E> である必要があるために、なるべく ArrayList<E>を使うようにします (MutableListではなく)
 
     val _numberList: ArrayList<String> =
         arrayListOf("A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K")
 
-    val _markList: ArrayList<Int> = arrayListOf(1, 2, 3, 4)   //  Int型  1:スペード    2: ハート    3: ダイヤ     4:クローバー
+    val _markList: ArrayList<Int> = arrayListOf(1, 2, 3, 4) // Int型  1:スペード  2: ハート  3: ダイヤ  4:クローバー もしジョーカー有りをするなら 5:JOKER とする 今回はジョーカー無し
 
     val _tagList: ArrayList<String> = arrayListOf("S", "H", "D", "C")
 
     // LinkedHashMap　は　順序を記憶します どうやらputは使用せずにindexing operatorで追加するほうが良いようです。
     // 通常のgetも存在しますが、putと同様にindexing operatorの使用が推奨されています。
+    // 今後、JOKERありの時に使うかもしれないため、PossibleCardオブジェクトの distanceフィールドを 作るため 使用するリスト
     val _distanceList: LinkedHashMap<Int, Int> = linkedMapOf(
         1 to -6,
         2 to -5,
@@ -42,22 +43,13 @@ class Game {
     )
 
     /**
-     * Javaで言う staticメソッド 静的メソッドのようなもの
-     */
-    companion object {
-        fun staticMethodTest() {
-
-        }
-    }
-
-    /**
      * 最初に卓上に置かれているカードのリストを作成し返す.
-     * 最初に 7のカードだけが置かれている状態になるようにする.
+     * 最初に 7のカードだけが置かれている状態になるようにする. placedフィールドを ７だけ true とする
      * 戻り値の型は ArrayList にすること
+     * intent.putExtra する際に 第二引数が ArrayList<E> である必要があるために、なるべく ArrayList<E>を使うようにします (MutableListではなく)
      */
     fun getStartTableCardData(): ArrayList<ListItem> {
         // まずリストを空で生成しておき、
-        //    val muList  = mutableListOf<ListItem>()  // あとで toList()をつけて List<ListItem>にすること    var data : List<ListItem> = muList.toList()
         val arrayList = arrayListOf<ListItem>()
 
         // まず、52枚のトランプカードを作る (ジョーカー以外) 管理ID 1 から 52のカードを作る
@@ -67,18 +59,18 @@ class Game {
 
         for (i in _tagList.indices) { // indices プロパティによって IntRangeの 0..3 が取得できますfor (i in 0..3) と書いたのと同じになります
             for (j in 1..13) { // ジョーカー以外をまず作成する スペード ハート　ダイヤ　クローバーの順に作成する
-                if (j == 7) {  // ７だけをきちんと作る
+                if (j == 7) {  // ７のカード
                     str = _tagList.get(i) + (j).toString()
                     listItem = ListItem(
                         ++count, // 管理IDは １からスタートして連番で振る Long値
                         _markList.get(i),
                         _numberList.get(j - 1),
                         _markList.get(i),
-                        true,  // 置いてある
+                        true,  // 7だけは 最初から置いてある
                         str
                     )
-                } else {  // 7以外の時は 卓上には置いていないので、マークは 0
-                    str = _tagList.get(i) + (j).toString()  // これはどうしようか
+                } else {  // 7以外 の時は 最初は卓上には置いていない
+                    str = _tagList.get(i) + (j).toString()
                     listItem = ListItem(
                         ++count, // 管理IDは １からスタートして連番で振る
                         _markList.get(i),
@@ -99,10 +91,10 @@ class Game {
      * "7"のカードは 最初から卓上に並べてある設定にしてるから 作らない.
      * Collections.shuffleして変更を加えたら、それを元にして新しいオブジェクトを生成し、そのオブジェクトを返します.全く別のオブジェクトにする
      * 戻り値の型は ArrayList にすること
+     * intent.putExtra する際に 第二引数が ArrayList<E> である必要があるために、なるべく ArrayList<E>を使うようにします (MutableListではなく)
      */
     fun getPlayersCardData(): ArrayList<PlayerListItem> {
         // まずリストを空で生成しておき、
-        //    val muList  = mutableListOf<PlayerListItem>()  //  後で変換する var data : List<PlayerListItem> = muList.toList()
         val arrayList = arrayListOf<PlayerListItem>()
 
         // まず、52枚のトランプカードを作る (ジョーカー以外) ID 1 から 52のカードを作る
@@ -110,7 +102,7 @@ class Game {
         var count: Long = 0
         for (i in _markList.indices) { //  スペード ハート　ダイヤ　クローバーの順に作成する  indicesプロパティで 0..3 と同じになる  i in 0..3  と同じこと
             for (j in 1..13) {
-                if (j != 7) {  //  7のカードは作らない
+                if (j != 7) {  //  7 のカードは作りません!!  7 以外を作る
                     playerListItem = PlayerListItem(
                         ++count, // 管理IDは １からスタートして連番で振る
                         _numberList.get(j - 1), // String型
@@ -122,7 +114,7 @@ class Game {
             }
         }
         // もし、ジョーカー1枚を追加するならここで作成するが 今回は作らない
-        //   var joker = PlayerListItem(49, "JOKER", 5)  // 管理IDは 1からスタートだから 7のカードは作らないから 49
+        //   var joker = PlayerListItem(49, "JOKER", 5, "JOKER")  // 管理IDは 1からスタートだから 7のカードは作らないから 49
         //    arrayList.add(joker)
 
         // 注意 ディープコピーをしたものを 返すようにすること
@@ -236,8 +228,6 @@ class Game {
         }
         return subList
     }
-
-
 
     /**
      * 引数のタグと同じマークで、引数num が指定の数 となるカードを取得する

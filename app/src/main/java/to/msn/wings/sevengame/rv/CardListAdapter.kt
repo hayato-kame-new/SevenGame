@@ -15,12 +15,12 @@ import to.msn.wings.sevengame.R
  */
 class CardListAdapter(private val _data: List<ListItem>) : RecyclerView.Adapter<CardViewHolder>() {
 
-    // フィールド
+    // フィールド 後でルールボタンつけた時に使う
     private val _isLayoutXLarge = false
 
     /**
      * ビューホルダーを生成
-     * ここでリスナーをつけることもできるが、onBindViewHolderでリスナーをつけた方がいい場合もある
+     * ここでリスナーをつけることもできるが、今回は onBindViewHolderでリスナーをつける
      */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CardViewHolder {
         val cardView : View = LayoutInflater.from(parent.context).inflate(R.layout.list_item, parent, false)
@@ -60,17 +60,8 @@ class CardListAdapter(private val _data: List<ListItem>) : RecyclerView.Adapter<
         // 非表示だけして、値は利用できるようにすること 置くときに値を変更する
         placed.visibility = View.GONE
         tag.visibility = View.GONE
-        // バインドするときに data[position].mark.toString() によって 分岐させる
-
-
 
         when(_data[position].mark.toString()) {
-//            "0" -> {  // おかれてないところ
-////                mark.visibility = View.GONE  // "0"になってるから 非表示にしておく "0"の値は判断するときに使うので非表示だけする おくときに値を変更する
-////                markDown.visibility = View.GONE
-//                // cardView.setCardBackgroundColor(null) // nullにはしない方がいい
-//                cardView.setCardBackgroundColor(Color.parseColor("#006c3a"))  // 色を重ねがけする方がいい
-//            }
             "1" -> {
                 mark.setText("♠")
                 markDown.setText("♠")
@@ -100,7 +91,7 @@ class CardListAdapter(private val _data: List<ListItem>) : RecyclerView.Adapter<
             cardView.setCardBackgroundColor(Color.parseColor("#006c3a"))  // 色を重ねがけする方がいい
         }
         /**
-         * rvを上に被せてると押せる でも、ここでは押せなくてもいい
+         * layoutで、rvを上に被せてると押せる でも、ここでは押せなくていいのでコメントアウトする
          */
 //        cardView.setOnClickListener {   // it　は CardViewです
 //            val tag = it.findViewById<TextView>(R.id.tag)

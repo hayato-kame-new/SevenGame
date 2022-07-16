@@ -1,29 +1,27 @@
 package to.msn.wings.sevengame
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.TextView
+import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import to.msn.wings.sevengame.playerrv.PlayerCardListAdapter
 import to.msn.wings.sevengame.playerrv.PlayerListItem
 import to.msn.wings.sevengame.rv.CardListAdapter
 import to.msn.wings.sevengame.rv.ListItem
-import android.widget.Button
-import android.widget.TextView
-import android.widget.Toast
-import androidx.core.content.ContextCompat
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
 import kotlin.properties.Delegates
 import kotlin.random.Random
+
+
 /**
  * MainActivity上のフラグメントです
  * Androidでは、アクティビティとフラグメントのクラスでは、引数なしのコンストラクタを強く推奨していますので、コンストラクタは規定通りにすること
@@ -47,6 +45,7 @@ class StartFragment : Fragment() {
     var _comBPassCounter by Delegates.notNull<Int>()
     // private
     private lateinit var _passBtn : Button
+    private lateinit var _ruleBtn : Button
     private lateinit var _a : TextView
     private lateinit var _b : TextView
     private lateinit var _aTxt : TextView
@@ -62,6 +61,8 @@ class StartFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_start, container, false)
+        _ruleBtn = view.findViewById<Button>(R.id.ruleBtn)
+        _ruleBtn.visibility = View.GONE  // 非表示にして 場所も詰める あとでルール表示する
         // コンピュータA の表示
         _a = view.findViewById<TextView>(R.id.a)
         _a.setBackgroundColor(activity?.resources?.getColor(R.color.comAColor)!!)
@@ -141,15 +142,18 @@ class StartFragment : Fragment() {
                 // if else追加すること
                 if (deepComAList.size == 0) {
                     val intent = Intent(context, MainActivity::class.java)  //必要
-                    // あなたの勝ちです！！ ダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
+                    // コンピュータA の勝ちです！！ ダイアログ表示出す  ここでダイアログを表示して、もう一度ゲームをするだけを作る
                     AlertDialog.Builder(context) // FragmentではActivityを取得して生成  Adapter onBindViewHolder では holder.itemView.context
                         .setTitle("コンピュータA の勝ちです")
                         .setMessage("ゲーム再開する")
                         .setPositiveButton("OK", { dialog, which ->
                             context?.startActivity(intent)
                         })
-                        .show()
+                        //   .show()
+                        .setCancelable(false).show().setCanceledOnTouchOutside(false)  //  .setCancelable(false).show().setCanceledOnTouchOutside(false) の順番
                     // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
+                    // setCancelable を false にすると、戻るボタンを押してもダイアログが閉じなくなります。
+                    // そして Dialog クラスの setCanceledOnTouchOutside メソッドを false にすると、ダイアログの外側をタップしてもダイアログが閉じなくなります
                 } else {
                     // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                     for (item in _tableCardData) {
@@ -195,9 +199,11 @@ class StartFragment : Fragment() {
                         .setPositiveButton("OK", { dialog, which ->
                             activity?.startActivity(intent)  // ここで遷移する  もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
                         })
-                        .show()
+                        //   .show()
+                        .setCancelable(false).show().setCanceledOnTouchOutside(false)  //  .setCancelable(false).show().setCanceledOnTouchOutside(false) の順番
                     // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
-
+                    // setCancelable を false にすると、戻るボタンを押してもダイアログが閉じなくなります。
+                    // そして Dialog クラスの setCanceledOnTouchOutside メソッドを false にすると、ダイアログの外側をタップしてもダイアログが閉じなくなります
                 } else if (_comAPassCounter == -1 && _comBPassCounter >= 0) { // もうパスできないので comAの負け ゲームはまだ続く
                     // comAの負けです トースト出す  comA手持ちを全て出す  comBとあなたでゲームは続く
                     val toast: Toast = Toast.makeText(
@@ -256,8 +262,11 @@ class StartFragment : Fragment() {
                         .setPositiveButton("OK", { dialog, which ->
                             context?.startActivity(intent)
                         })
-                        .show()
+                        //   .show()
+                        .setCancelable(false).show().setCanceledOnTouchOutside(false)  //  .setCancelable(false).show().setCanceledOnTouchOutside(false) の順番
                     // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
+                    // setCancelable を false にすると、戻るボタンを押してもダイアログが閉じなくなります。
+                    // そして Dialog クラスの setCanceledOnTouchOutside メソッドを false にすると、ダイアログの外側をタップしてもダイアログが閉じなくなります
                 } else {
                     // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
                     for (item in _tableCardData) {
@@ -303,9 +312,11 @@ class StartFragment : Fragment() {
                         .setPositiveButton("OK", { dialog, which ->
                             activity?.startActivity(intent)  // ここで遷移する  もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
                         })
-                        .show()
+                     //   .show()
+                        .setCancelable(false).show().setCanceledOnTouchOutside(false)  //  .setCancelable(false).show().setCanceledOnTouchOutside(false) の順番
                     // もう一度ゲームをするを押したら、 intent を発行して、extras を nullにしておけば、また、　最初から始まる　つまり何も putExtraしないこと
-
+                    // setCancelable を false にすると、戻るボタンを押してもダイアログが閉じなくなります。
+                    // そして Dialog クラスの setCanceledOnTouchOutside メソッドを false にすると、ダイアログの外側をタップしてもダイアログが閉じなくなります
                 } else if (_comBPassCounter == -1 && _comAPassCounter >= 0) { // もうパスできないので comBの負け ゲームはまだ続く
                     // comBの負けです トースト出す  comB手持ちを全て出す  comAとあなたでゲームは続く
                     val toast: Toast = Toast.makeText(
@@ -385,7 +396,9 @@ class StartFragment : Fragment() {
                     .setPositiveButton("OK", { dialog, which ->
                         activity?.startActivity(intent)
                     })
-                    .show()
+                    .setCancelable(false).show().setCanceledOnTouchOutside(false)  // .setCancelable(false).show().setCanceledOnTouchOutside(false)の順番
+                // setCancelable を false にすると、戻るボタンを押してもダイアログが閉じなくなります。
+                // そして Dialog クラスの setCanceledOnTouchOutside メソッドを false にすると、ダイアログの外側をタップしてもダイアログが閉じなくなります
             } else {
                 // まだゲームは続けられる
                 _passBtn.text = "パス 残り " + _playerPassCounter.toString() + "回"
@@ -429,7 +442,6 @@ class StartFragment : Fragment() {
         return view  // フラグメントでは最後必ず viewを返す
     }
 
-
     /**
      * 管理ID順に並べる.インスタンスメソッド
      */
@@ -472,19 +484,17 @@ class StartFragment : Fragment() {
      * コンピューターのパスの残りの表示や負けた時の表示.
      */
     fun comDisplay(view: TextView, count: Int) {
-        when(count) {
-            0 -> {
-                view.text = " パス 残りなし"
-                view.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
-            }
-            -1 -> {
-                view.text = " 負けました "
-                view.setTextColor(activity?.resources?.getColor(R.color.white)!!)
-                view.setBackgroundColor(activity?.resources?.getColor(R.color.black)!!)
-            }
-            else -> {
-                view.text = " パス 残り " + count.toString() + "回"
-            }
+        if (count == 0) {
+            view.text = " パス 残りなし"
+            view.setBackgroundColor(activity?.resources?.getColor(R.color.danger)!!)
+        } else if (count <= -1) {
+            view.text = " 負けました "
+            view.setTextColor(activity?.resources?.getColor(R.color.white)!!)
+            view.setBackgroundColor(activity?.resources?.getColor(R.color.black)!!)
+        } else if (count > 0) {
+            view.text = " パス 残り " + count.toString() + "回"
+        } else {
+
         }
     }
 

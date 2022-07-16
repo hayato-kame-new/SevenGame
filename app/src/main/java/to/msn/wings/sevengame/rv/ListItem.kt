@@ -4,9 +4,9 @@ import android.annotation.SuppressLint
 import android.os.Parcelable
 import java.io.Serializable
 /**
- * data class です.卓上テーブル用.  自作したクラスを intentで送るためには Serializableインタフェースを実装しなくてはなりません.
- * RecyclerViewのための
- * import java.io.Serializable  をインポートして Serializableインタフェースを実装しないと intentで送れません
+ * data class です.卓上テーブル用. 自作したクラスを intentで送るためには Serializableインタフェースを実装しなくてはなりません.
+ * RecyclerViewのために使う.
+ * import java.io.Serializable をインポートする.
  */
 data class ListItem(
     val id: Long,  //  識別のための
