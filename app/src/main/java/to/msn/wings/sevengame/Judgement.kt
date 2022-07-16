@@ -1,16 +1,24 @@
 package to.msn.wings.sevengame
 
+/**
+ * possible属性を操作し変更をして 次に置くことができるカードを判断するためのクラス
+ */
 class Judgement( poList: ArrayList<PossibleCard> ){
 
     // フィールド
     val _game = Game()
     // ディープコピーすること   そしてこの値を最後メソッドで返す　
     val _deepPossibleCardList: ArrayList<PossibleCard> = _game.getSubList(poList) as ArrayList<PossibleCard>
+
     /**
-     * 小さいカード置いた時
+     * 小さいカード置いた時.
+     * 正常の向きは 6 5 4 3 2 1
+     * 逆の向きは 1 2 3 4 5 6 (8 9 10 11 12 13 までカードが既に全て置かれているときに 今度は 1から昇順でカードを置くように逆向きになります)
+     * 1 のカードが置かれた時に、どちらの方向の場合に置かれたのか によって操作が異なります.分岐しています.
      */
     fun methodSmall( pTagStr: String): ArrayList<PossibleCard>{
         val putCardNum = pTagStr.substring(1).toInt()  // 置いたカードの数字
+        // 1 のカードが置かれた時に、どちらの方向の場合に置かれたのか によって操作が異なります.分岐しています.
         if (putCardNum == 1) {
             var count = 0
             for (num in 8..13) {
@@ -84,10 +92,14 @@ class Judgement( poList: ArrayList<PossibleCard> ){
 
 
     /**
-     * 置いたカード大きい時
+     * 大きいカード置いた時.
+     * 正常の向きは 8 9 10 11 12 13
+     * 逆の向きは 13 12 11 10 9 8  (6 5 4 3 2 1 までカードが既に全て置かれているときに 今度は 13から降順でカードを置くように逆向きになります)
+     * 13 のカードが置かれた時に、どちらの方向の場合に置かれたのか によって操作が異なります.分岐しています.
      */
     fun methodBig(pTagStr: String): ArrayList<PossibleCard> {
         val putCardNum = pTagStr.substring(1).toInt()
+            //  13 のカードが置かれた時に、どちらの方向の場合に置かれたのか によって操作が異なります.分岐しています.
             if (putCardNum == 13) {
                 var count = 0
                 for (num in 1..6) {

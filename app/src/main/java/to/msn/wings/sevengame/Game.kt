@@ -126,6 +126,9 @@ class Game {
         return deepArrayList
     }
 
+    /**
+     * 初期値としてリストを作成する.次に置ける可能性のあるカードは placed属性が false かつ possible属性が trueのカードになります.
+     */
     fun getPossibleCardData(): ArrayList<PossibleCard> {
         // まず空の ArrayListオブジェクトを生成して
         val arrayList = arrayListOf<PossibleCard>()
@@ -188,7 +191,7 @@ class Game {
     /**
      * オーバーロード(多重定義)
      * インデックで要素を取得したいなら、戻り値は Listにすべきです Setは順番を持たないからです
-     * HashSet<PossibleCard>　の中から 同じタグで かつ possible属性が true の PossibleCardオブジェクトを取得
+     * ArrayList<PossibleCard>　の中から 同じタグで かつ possible属性が true の PossibleCardオブジェクトを取得
      * 置くことのできそうなカードを探してリストにする 複数見つかる時もあるし、空のリストを返す時もある
      * 戻り値 ArrayList<PossibleCard>型です
      */
@@ -205,7 +208,7 @@ class Game {
     }
 
     /**
-     * 多重定義(オーバーロード) シグネチャが異なれば同名のメソッドで、異なる内容の処理が書ける.インスタンスメソッド
+     * 多重定義(オーバーロード) シグネチャが異なれば同名のメソッドで、異なる内容の処理が書ける.
      * リストをディープコピーする.
      * プレイヤーのカードを人数分で分ける.新しくオブジェクトを作り直して ディープコピーをする MutableListじゃないとだめ
      */
@@ -217,7 +220,7 @@ class Game {
         return subList
     }
     /**
-     * リストをディープコピーする.新しい別のオブジェクトを生成する(全く同じ内容にする).インスタンスメソッド
+     * リストをディープコピーする.新しい別のオブジェクトを生成する(全く同じ内容にする).
      * 多重定義(オーバーロード) シグネチャが異なれば同名のメソッドで、異なる内容の処理が書ける.
      * 新しくオブジェクトを作り直して ディープコピーをする MutableListじゃないとだめ
      */
@@ -230,12 +233,10 @@ class Game {
     }
 
     /**
-     * 引数のタグと同じマークで、引数num が指定の数 となるカードを取得する
+     * 引数のタグと同じマークで、引数num が指定の数 となるカードを取得する.
      */
     fun getPossibleCard(list: ArrayList<PossibleCard>, tag: String, num: Int): PossibleCard? {
-
         var mark: String = tag.substring(0,1)  // "S"とか
-
         var newTagstr: String = mark + num.toString()
 
         var possibleCard: PossibleCard? = null
