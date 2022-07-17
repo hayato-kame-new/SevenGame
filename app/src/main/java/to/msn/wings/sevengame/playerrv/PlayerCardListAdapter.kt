@@ -35,8 +35,9 @@ class PlayerCardListAdapter(
     private val _comBPassCounter : Int
 ) : RecyclerView.Adapter<PlayerCardViewHolder>() {
 
-    // フィールド
-    private val _isLayoutXLarge = false
+    // 画面サイズ判定フラグ インスタンスフィールド アクティビティ(もしくはフラグメント)では onViewStateRestoredコールバックメソッドをオーバーライドする
+    private var _isLayoutLarge7Inch : Boolean = true  // 初期値を trueにしておく
+    private var _isLayoutXLarge10Inch : Boolean = true  // 初期値を trueにしておく
 
     // 遅延して コンストラクタの引数で渡ってきたものをフィールド値にセットします
     //  変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。

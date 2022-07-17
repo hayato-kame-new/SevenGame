@@ -6,6 +6,8 @@
         <entry key="../../../../layout/custom_preview.xml" value="0.13229166666666667" />
         <entry key="app/src/main/res/drawable/computer_txt_style.xml" value="0.158" />
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.153" />
+        <entry key="app/src/main/res/layout-large/activity_main.xml" value="0.17144808743169399" />
+        <entry key="app/src/main/res/layout-xlarge/activity_main.xml" value="0.16495901639344263" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.18070652173913043" />
         <entry key="app/src/main/res/layout/fragment_start.xml" value="0.165" />
         <entry key="app/src/main/res/layout/list_item.xml" value="0.335" />

@@ -1,5 +1,6 @@
 package to.msn.wings.sevengame
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Intent
@@ -10,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.Nullable
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -28,6 +30,10 @@ import kotlin.random.Random
  * intent.putExtra する際に 第二引数が ArrayList<E> である必要があるために、なるべく ArrayList<E>を使うようにします (MutableListではなく)
  */
 class StartFragment : Fragment() {
+
+    private var _isLayoutLarge7Inch : Boolean = true  // 初期値を trueにしておく
+    private var _isLayoutXLarge10Inch : Boolean = true  // 初期値を trueにしておく
+
      // publicにしておく 次に置ける候補のカードを要素としている
     lateinit var _possibleCardList: ArrayList<PossibleCard>  // indexでアクセスするには リストにすべき Setは順番を持たないためできない
     // 変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
@@ -61,6 +67,7 @@ class StartFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_start, container, false)
+        // 画面サイズによって表示する しない
         _ruleBtn = view.findViewById<Button>(R.id.ruleBtn)
         _ruleBtn.visibility = View.GONE  // 非表示にして 場所も詰める あとでルール表示する
         // コンピュータA の表示
@@ -442,6 +449,55 @@ class StartFragment : Fragment() {
         }
         return view  // フラグメントでは最後必ず viewを返す
     }
+
+
+    /**
+     * onActivityCreated() メソッドは非推奨になりました。 onViewStateRestored に書いてください
+     * ここでViewの状態を復元する
+     * onCreate   onCreateView   onViewCreated   非推奨のonActivityCreated   推奨のonViewStateRestored  の順で呼ばれる
+     * import androidx.annotation.Nullable
+     * @param savedInstanceState
+     */
+    override fun onViewStateRestored(@Nullable savedInstanceState: Bundle?) {  //  import androidx.annotation.Nullable
+        super.onViewStateRestored(savedInstanceState)
+//        val parentActivity: Activity? =
+//            activity // このフラグメントの自分　が所属するアクティビティを取得する MonthCalendarActivity
+
+        // 自分が所属するアクティビティから、 　FrameLayoutを取得する
+        val large7InchActivityMainFrame =
+            activity?.findViewById<View>(R.id.large7InchActivityMainFrame)
+
+        val xLarge10InchActivityMainFrame =
+            activity?.findViewById<View>(R.id.xLarge10InchActivityMainFrame)
+
+        // この判定は CardViewに表示するテキストのサイズなどの切り替えを画面サイズによって設定する時に使う PlayerCardListAdaoterクラスで使うために必要
+        if (large7InchActivityMainFrame == null) {  // nullならば、大画面ではないので
+            // 画面判定フラグを通常画面(スマホサイズ)とする
+            _isLayoutLarge7Inch = false // falseだと 通常画面(スマホサイズ) か　10インチ画面がのどちらか
+        }
+        if (xLarge10InchActivityMainFrame == null) {  // nullならば、大画面ではないので
+            // 画面判定フラグを通常画面(スマホサイズ)とする
+            _isLayoutXLarge10Inch = false // falseだと 通常画面(スマホサイズ) か　7インチ画面がのどちらか
+        }
+    }
+
+
+    /**
+     * _isLayoutLarge7Inch フィールドの値を取得する.
+     */
+    fun is_7Inch(): Boolean {
+        return _isLayoutLarge7Inch
+    }
+
+    /**
+     * _isLayoutXLarge10Inch フィールドの値を取得する.
+     */
+    fun is_10Inch(): Boolean {
+        return _isLayoutXLarge10Inch
+    }
+
+
+
 
     /**
      * 管理ID順に並べる.インスタンスメソッド
