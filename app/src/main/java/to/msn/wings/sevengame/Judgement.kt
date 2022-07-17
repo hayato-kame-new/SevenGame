@@ -170,4 +170,5 @@ class Judgement( poList: ArrayList<PossibleCard> ){
             }
         return _deepPossibleCardList  // 最後書き換えたのを返す 呼び出し元で必要です
     }
+
 }
