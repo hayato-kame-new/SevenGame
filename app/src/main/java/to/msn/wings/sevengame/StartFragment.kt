@@ -498,8 +498,6 @@ class StartFragment : Fragment() {
     }
 
 
-
-
     /**
      * 管理ID順に並べる.インスタンスメソッド
      */
