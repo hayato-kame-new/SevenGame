@@ -1,5 +1,5 @@
 package to.msn.wings.sevengame
-
+//  import android.R を書くとエラーになるので注意.
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.Dialog
@@ -31,7 +31,10 @@ import kotlin.random.Random
  */
 class StartFragment : Fragment() {
 
+    // _isLayoutLarge7Inch  _isLayoutXLarge10Inch 両方 falseの時は　スマホサイズになる
+    // 7inch画面のタブレット画面
     private var _isLayoutLarge7Inch : Boolean = true  // 初期値を trueにしておく
+    // 10inch画面のタブレット画面
     private var _isLayoutXLarge10Inch : Boolean = true  // 初期値を trueにしておく
 
      // publicにしておく 次に置ける候補のカードを要素としている
@@ -460,8 +463,6 @@ class StartFragment : Fragment() {
      */
     override fun onViewStateRestored(@Nullable savedInstanceState: Bundle?) {  //  import androidx.annotation.Nullable
         super.onViewStateRestored(savedInstanceState)
-//        val parentActivity: Activity? =
-//            activity // このフラグメントの自分　が所属するアクティビティを取得する MonthCalendarActivity
 
         // 自分が所属するアクティビティから、 　FrameLayoutを取得する
         val large7InchActivityMainFrame =
@@ -471,12 +472,10 @@ class StartFragment : Fragment() {
             activity?.findViewById<View>(R.id.xLarge10InchActivityMainFrame)
 
         // この判定は CardViewに表示するテキストのサイズなどの切り替えを画面サイズによって設定する時に使う PlayerCardListAdaoterクラスで使うために必要
-        if (large7InchActivityMainFrame == null) {  // nullならば、大画面ではないので
-            // 画面判定フラグを通常画面(スマホサイズ)とする
+        if (large7InchActivityMainFrame == null) {  // nullならば、現在は 7Inch画面ではない
             _isLayoutLarge7Inch = false // falseだと 通常画面(スマホサイズ) か　10インチ画面がのどちらか
         }
-        if (xLarge10InchActivityMainFrame == null) {  // nullならば、大画面ではないので
-            // 画面判定フラグを通常画面(スマホサイズ)とする
+        if (xLarge10InchActivityMainFrame == null) {  // nullならば、現在は 10Inch画面では
             _isLayoutXLarge10Inch = false // falseだと 通常画面(スマホサイズ) か　7インチ画面がのどちらか
         }
     }
@@ -484,6 +483,7 @@ class StartFragment : Fragment() {
 
     /**
      * _isLayoutLarge7Inch フィールドの値を取得する.
+     * PlayerCardListAdapterクラスで使用するため必要.
      */
     fun is_7Inch(): Boolean {
         return _isLayoutLarge7Inch
@@ -491,6 +491,7 @@ class StartFragment : Fragment() {
 
     /**
      * _isLayoutXLarge10Inch フィールドの値を取得する.
+     * PlayerCardListAdapterクラスで使用するため必要.
      */
     fun is_10Inch(): Boolean {
         return _isLayoutXLarge10Inch

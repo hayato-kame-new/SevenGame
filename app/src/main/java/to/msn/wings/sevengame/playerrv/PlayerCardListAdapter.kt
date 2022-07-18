@@ -1,6 +1,8 @@
 package to.msn.wings.sevengame.playerrv
 
+//  import android.R を書くとエラーになるので注意.
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.view.LayoutInflater
@@ -8,14 +10,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.RecyclerView
 import to.msn.wings.sevengame.*
 import to.msn.wings.sevengame.rv.ListItem
-import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
-import kotlin.properties.Delegates
+
 
 /**
  * コンストラクタの引数を増やしています.
@@ -36,8 +39,11 @@ class PlayerCardListAdapter(
 ) : RecyclerView.Adapter<PlayerCardViewHolder>() {
 
     // 画面サイズ判定フラグ インスタンスフィールド アクティビティ(もしくはフラグメント)では onViewStateRestoredコールバックメソッドをオーバーライドする
-    private var _isLayoutLarge7Inch : Boolean = true  // 初期値を trueにしておく
-    private var _isLayoutXLarge10Inch : Boolean = true  // 初期値を trueにしておく
+    // onCreateViewHolderコールバックメソッド内で、所属するactivityは何か調べてから activityからフラグメントマネージャーを取得しfindFragmentById メソッドを使って
+    //  .is_7Inch()  .is_10Inch() インスタンスメソッドで調べて この フィールドへ 代入します そして
+    private var _isLayoutLarge7Inch : Boolean = false  // アダプターのクラスでは 初期値を falseにしておく
+
+    private var _isLayoutXLarge10Inch : Boolean = false  // アダプターのクラスでは 初期値を falseにしておく
 
     // 遅延して コンストラクタの引数で渡ってきたものをフィールド値にセットします
     //  変数を lateinit で宣言することにより、初期化タイミングを onCreate() 呼び出しまで遅延させています。
@@ -49,7 +55,52 @@ class PlayerCardListAdapter(
     private lateinit var _deepComAList: ArrayList<PlayerListItem> // フィールド宣言だけ フィールドの型は実装の型にすること
     private lateinit var _deepComBList: ArrayList<PlayerListItem> // フィールド宣言だけ フィールドの型は実装の型にすること
 
+    /**
+     * ビューホルダーを生成.
+     * import android.R を書くとエラーになるので注意.
+     * 引数の parent から contextプロパティが取得できます
+     */
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlayerCardViewHolder {
+
+        // MainActivity の上のフラグメントしか、このアダプターは使ってないから、分岐処理は無いが、
+        // AppCompatActivity は、MainActivityの時もあるし、そうでない時もあるから
+        val context: Context = parent.context  // 大切 parentから contextプロパティを取得する
+        val appCompatActivity: AppCompatActivity = context as AppCompatActivity  // 大切 contextプロパティを ダウンキャストする
+        // ダウンキャストは 明示的に as演算子(キャスト演算子) で キャストをしてください
+
+        var mainActivity: MainActivity? = null
+        // もう一つのActivityがあればここに書く 例の為に書いてるだけ
+        //   var monthCalendarActivity : MonthCalendarActivity? = null
+
+        if (appCompatActivity.javaClass == MainActivity::class.java) {
+            mainActivity = appCompatActivity as MainActivity  // ダウンキャストは 明示的に as演算子(キャスト演算子) で キャストをしてください
+        }
+//        else if (appCompatActivity.javaClass == MonthCalendarActivity::class.java) {  // 例のために書いてるだけ
+//            monthCalendarActivity = appCompatActivity as MonthCalendarActivity
+//        }
+
+        var fmanager: FragmentManager? = null    //  import androidx.fragment.app.FragmentManager    androidx の方です
+
+        if (mainActivity != null) {
+            fmanager = (mainActivity as FragmentActivity).supportFragmentManager  // 明示的に ダウンキャストする必要がある
+            // 取得した フラグメントマネージャーオブジェクトから
+            // MainActivityに所属している フラグメントが取得できます findFragmentById メソッドを使って
+            // MainActivityの上には StartFragmentが 所属しています    import android.R を書くとエラーになるので注意.
+            val startFragment = fmanager.findFragmentById(R.id.startFragment) as StartFragment
+            // startFragmentオブジェクトから、インスタンスメソッドの呼び出しをして、このクラスのフィールドに代入する
+            // ここで フィールドへ代入しておき、後で onBindViewHoldeコールバックメソッド内で、使用します
+            _isLayoutLarge7Inch = startFragment.is_7Inch()
+            _isLayoutXLarge10Inch = startFragment.is_10Inch()
+
+        }
+//        else if (monthCalendarActivity != null) {  // 例のために書いてあるだけ
+//            fmanager = (monthCalendarActivity as FragmentActivity).supportFragmentManager
+//            // MonthCalendarActivityの 上には MonthCalendarFragment が乗っているので
+//            val monthCalendarFragment = fmanager.findFragmentById(R.id.monthCalendarFragment) as MonthCalendarFragment?
+//            _isLayoutXLarge = monthCalendarFragment!!.is_isLayoutXLarge()
+//        }
+
+
         val cardView : View = LayoutInflater.from(parent.context).inflate(R.layout.player_list_item, parent, false)
         // ここで lateinit varフィールドへ 初期値をセットします (引数で渡ってきた値を使って)
         // ディープコピー 新たに 別のオブジェクトを生成しています 注意！！！ ディープコピーにしないとエラー _cardSet = cardSet としてはいけない バインドが終わるまで cardSetも変わってしまってはいけないからです
@@ -67,6 +118,12 @@ class PlayerCardListAdapter(
         return PlayerCardViewHolder(cardView)
     }
 
+    /**
+     * ビューにデータを割り当て、リスト項目を生成.
+     * データのバインドは getItemCount()の戻り値の回数だけ 実行されます (data.size の数だけ).
+     * バインドする際に、リスナーをつけておきます。
+     * バインドする際に、ここで属性を変更できる.画面サイズによって属性を動的に変更もできます.
+     */
     override fun onBindViewHolder(holder: PlayerCardViewHolder, position: Int) {
         holder.pId.text = data[position].pId.toString()  // data を使います
         holder.pNumber.text = data[position].pNumber
@@ -197,63 +254,30 @@ class PlayerCardListAdapter(
                     intent.putExtra("comBPassCount", _comBPassCounter)  // そのまま渡すだけ
                     // MainActivityへ遷移します
                     context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
-
                 }
-
-//                // そして、 卓上の_tableCardDataのアイテムListItemの属性を変更すること ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-//                for (item in _tableCardData) {
-//                   if (item.tag.equals(txtP.text)) {
-//                        item.placed = true  // placedプロパティを falseの時には View.GONEにしてるから trueにすれば非表示ではなくなります
-//                    }
-//                }
-//
-//                // さらに、　出したカードの属性を変更する ただの属性の書き換えなので、イテレータはなくても大丈夫 forが使える
-//                for (item in _deepPossibleCardList) {
-//                    if (item.tag.equals(txtP.text.toString())) {
-//                        item.placed = true  // 置いた
-//                        item.possible = false // もう卓上に置いたから、 次に置けるカードでは無くなったので falseにする
-//                    }
-//                }
-//                // 次に出せるカードの変更
-//                val pTagStr: String = txtP.text.toString()  // 置いたカードのタグの文字列 "S6" とか
-//                val putNum: Int = pTagStr.substring(1).toInt()
-//                val game =  Game()
-//                // さらに、次に出せるカードの属性を変更する
-//                val judge = Judgement(_deepPossibleCardList)
-//                if (putNum in 1..6) {
-//                    val list = judge.methodSmall(pTagStr)  // 属性を書き換えた リストを返すので、
-//                    _deepPossibleCardList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
-//                } else if (putNum in 8..13) {
-//                    val list = judge.methodBig(pTagStr)  // 属性を書き換えた リストを返すので、
-//                    _deepPossibleCardList = game.getSubList(list) as ArrayList<PossibleCard>  // ディープコピー
-//                }
-//
-//                    // トースト表示
-//                val toast: Toast = Toast.makeText(context, context.getString(R.string.put_on, txtP.text.toString()), Toast.LENGTH_SHORT)
-//                toast.show()
-//                  // 注意点 putExtraは リストの時には ArrayList型でないとだめ
-//               // 注意点  PlayerListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要がる
-//                intent.putExtra("data", _deepDataList as ArrayList<PlayerListItem> )
-//                //  自作したクラス PossibleCardを intentで送るためには Serializableインタフェースを実装します
-//                intent.putExtra("poList", _deepPossibleCardList as ArrayList<PossibleCard>)
-//                // 注意点 ListItemデータクラスは自作のクラスなので、intentで送るためには Serializableインタフェースを実装する必要があります
-//                intent.putExtra("tableCardData", _tableCardData as ArrayList<ListItem>)
-//                intent.putExtra("comAList", _deepComAList as ArrayList<PlayerListItem>)
-//                intent.putExtra("comBList", _deepComBList as ArrayList<PlayerListItem>)
-//                intent.putExtra("pPassCount", _playerPassCounter)  // そのまま渡すだけ
-//                intent.putExtra("comAPassCount", _comAPassCounter)  // そのまま渡すだけ
-//                intent.putExtra("comBPassCount", _comBPassCounter)  // そのまま渡すだけ
-//                // MainActivityへ遷移します
-//                context.startActivity(intent)  // もともとMainActivityは戻るボタンでいつでももどるので終わらせることはありません
             } else {
-                // クリックしたものは置けないカードだったので トースト表示だけ 遷移しません パスをしたいなら、ボタンを押せるようにしてるから
+                // クリックしたカードは置けないカードだったので
                 val toast: Toast = Toast.makeText(context, context.getString(R.string.uncontained), Toast.LENGTH_SHORT)
                 toast.show()
             }
         }
+        // リスナーここまで
+
+        // 画面サイズによって、属性を変更します
+        if (_isLayoutLarge7Inch) {  //  trueの時です
+            holder.pNumber.setTextSize(26F)
+            holder.pMark.setTextSize(24F)
+        }
+        if (_isLayoutXLarge10Inch) { //  trueの時です
+            holder.pNumber.setTextSize(28F)
+            holder.pMark.setTextSize(26F)
+        }
 
     }
 
+    /**
+     * データのバインドはこの回数実行されます
+     */
     override fun getItemCount(): Int {
         return data.size
     }
