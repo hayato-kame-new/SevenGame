@@ -8,7 +8,7 @@
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/startFragment"
         android:name="to.msn.wings.sevengame.StartFragment"
-        android:layout_width="wrap_content"
+        android:layout_width="940dp"
         android:layout_height="wrap_content" />
 
     <FrameLayout
